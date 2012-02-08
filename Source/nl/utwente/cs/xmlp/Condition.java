@@ -1,7 +1,5 @@
 package nl.utwente.cs.xmlp;
 
-import java.util.Map;
-
 public class Condition {
 
 	public final String name;
@@ -18,6 +16,20 @@ public class Condition {
 	public Condition(String name, int value) {
 		this.name = name;
 		this.value = value;
+	}
+
+	/**
+	 * Create a new Condition from the a string of the form "name=value".
+	 * 
+	 * @param condition
+	 *            The condition as a string.
+	 */
+	public Condition(String condition) {
+		// split name=value into name and value
+		String[] parts = condition.split("=");
+		// assume this went fine
+		this.name = parts[0].trim();
+		this.value = Integer.parseInt(parts[1].trim());
 	}
 
 	/**
