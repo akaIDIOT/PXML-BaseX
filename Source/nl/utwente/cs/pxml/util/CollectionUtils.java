@@ -1,4 +1,4 @@
-package nl.utwente.cs.xmlp.util;
+package nl.utwente.cs.pxml.util;
 
 import java.util.Iterator;
 

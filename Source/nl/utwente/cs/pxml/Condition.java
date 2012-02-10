@@ -1,4 +1,4 @@
-package nl.utwente.cs.xmlp;
+package nl.utwente.cs.pxml;
 
 public class Condition {
 

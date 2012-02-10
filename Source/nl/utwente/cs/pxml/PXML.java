@@ -1,11 +1,11 @@
-package nl.utwente.cs.xmlp;
+package nl.utwente.cs.pxml;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import nl.utwente.cs.xmlp.util.CollectionUtils;
+import nl.utwente.cs.pxml.util.CollectionUtils;
 
-public abstract class XMLP {
+public abstract class PXML {
 
 	public static String combine(String... conditions) {
 		// create a condition 'container'
