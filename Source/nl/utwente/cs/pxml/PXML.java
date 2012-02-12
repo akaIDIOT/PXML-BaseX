@@ -9,6 +9,14 @@ import nl.utwente.cs.pxml.util.CollectionUtils;
 
 public abstract class PXML {
 
+	/**
+	 * Combines all conditions into a single string keeping only the unique
+	 * conditions. The result need not be consistent.
+	 * 
+	 * @param conditions
+	 *            The conditions to be combined.
+	 * @return A single string containing all conditions in the parameters.
+	 */
 	public static String combine(String... conditions) {
 		// TODO: would the uniqueness of the strings in the argument not be
 		// enough?
@@ -20,10 +28,19 @@ public abstract class PXML {
 			result.add(new Condition(condition));
 		}
 
-		// join the resulting set on the separator 
+		// join the resulting set on the separator
 		return CollectionUtils.join(result, " ");
 	}
 
+	/**
+	 * Checks whether the provided descriptor is consistent. Consistency means
+	 * no variables occurring twice with different values.
+	 * 
+	 * @param descriptor
+	 *            The condition descriptor string to be tested.
+	 * @return Whether the conditions in the provided condition string are
+	 *         consistent.
+	 */
 	public static boolean consistent(String descriptor) {
 		ConditionGenerator generator = new ConditionGenerator(descriptor);
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
@@ -43,6 +60,16 @@ public abstract class PXML {
 		return true;
 	}
 
+	/**
+	 * Tests whether condition descriptor a is mutually exclusive with condition
+	 * descriptor b by checking for variables in a having different values in b.
+	 * 
+	 * @param a
+	 *            The one condition descriptor.
+	 * @param b
+	 *            The other condition descriptor.
+	 * @return Whether the two condition descriptors are mutually exclusive.
+	 */
 	public static boolean mutuallyExclusive(String a, String b) {
 		ConditionGenerator condA = new ConditionGenerator(a);
 		ConditionGenerator condB = new ConditionGenerator(b);
@@ -60,7 +87,7 @@ public abstract class PXML {
 		for (Condition condition : condB) {
 			Integer value = conditions.get(condition.name);
 			if (value != null && value != condition.value) {
-				// immediately return false if this such a condition is found 
+				// immediately return false if this such a condition is found
 				return true;
 			}
 		}
@@ -68,6 +95,18 @@ public abstract class PXML {
 		return false;
 	}
 
+	/**
+	 * Calculates the probability of all conditions by simply multiplying them
+	 * together. Does *not* check for consistency (which would make the
+	 * probability 0).
+	 * 
+	 * @param docName
+	 *            The document name of the place where the probabilities are
+	 *            stored.
+	 * @param conditions
+	 *            The conditions to look up.
+	 * @return The probability of all conditions being true.
+	 */
 	public static double probability(String docName, String... conditions) {
 		// TODO: cache probabilities with (docName, condition) as keys? (static
 		// mapping in PXML?)
