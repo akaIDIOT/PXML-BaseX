@@ -5,9 +5,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.basex.query.QueryModule;
+
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
-public abstract class PXML {
+public class PXML extends QueryModule {
 
 	/**
 	 * Combines all conditions into a single string keeping only the unique
@@ -17,7 +19,7 @@ public abstract class PXML {
 	 *            The conditions to be combined.
 	 * @return A single string containing all conditions in the parameters.
 	 */
-	public static String combine(String... conditions) {
+	public String combine(String... conditions) {
 		// TODO: would the uniqueness of the strings in the argument not be
 		// enough?
 
@@ -41,7 +43,7 @@ public abstract class PXML {
 	 * @return Whether the conditions in the provided condition string are
 	 *         consistent.
 	 */
-	public static boolean consistent(String descriptor) {
+	public boolean consistent(String descriptor) {
 		ConditionGenerator generator = new ConditionGenerator(descriptor);
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
 
@@ -70,7 +72,7 @@ public abstract class PXML {
 	 *            The other condition descriptor.
 	 * @return Whether the two condition descriptors are mutually exclusive.
 	 */
-	public static boolean mutuallyExclusive(String a, String b) {
+	public boolean mutuallyExclusive(String a, String b) {
 		ConditionGenerator condA = new ConditionGenerator(a);
 		ConditionGenerator condB = new ConditionGenerator(b);
 		// TODO: is using a map a problem? (possibly breaks comparison
@@ -107,7 +109,7 @@ public abstract class PXML {
 	 *            The conditions to look up.
 	 * @return The probability of all conditions being true.
 	 */
-	public static double probability(String docName, String... conditions) {
+	public double probability(String docName, String... conditions) {
 		// TODO: cache probabilities with (docName, condition) as keys? (static
 		// mapping in PXML?)
 
