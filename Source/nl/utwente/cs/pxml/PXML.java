@@ -12,6 +12,11 @@ import org.basex.util.InputInfo;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
+/**
+ * Importable query module containing functions for use with probablistic XML.
+ * 
+ * @author Mattijs Ugen
+ */
 public class PXML extends QueryModule {
 
 	protected Map<ProbabilityCacheKey, Double> probabilityCache;
@@ -169,6 +174,11 @@ public class PXML extends QueryModule {
 		return 0.0;
 	}
 
+	/**
+	 * Record used as a key in the probability cache of {@link PXML}.
+	 * 
+	 * @author Mattijs Ugen
+	 */
 	public static class ProbabilityCacheKey implements Comparable<ProbabilityCacheKey> {
 
 		// the document this instance belongs to

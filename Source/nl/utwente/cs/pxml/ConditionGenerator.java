@@ -5,6 +5,18 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+/**
+ * Class that generates {@link Condition} instances from a string. Meant to be
+ * used as
+ * 
+ * <pre>
+ * for (Condition condition : new ConditionGenerator(conditions)) {
+ * 	// do something with condition
+ * }
+ * </pre>
+ * 
+ * @author Mattijs Ugen
+ */
 public class ConditionGenerator implements Iterable<Condition>, Iterator<Condition> {
 
 	// pattern separating both conditions and names and values within a
