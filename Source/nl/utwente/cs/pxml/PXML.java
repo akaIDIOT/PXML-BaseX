@@ -72,7 +72,7 @@ public class PXML extends QueryModule {
 
 		for (Condition condition : generator) {
 			// rely on Map to enforce uniqueness of name, use Integer as it can
-			// be null
+			// be null (TODO: test this)
 			Integer value = conditions.put(condition.name, condition.value);
 			if (value != null && value != condition.value) {
 				// immediately return false if the name was already encountered
@@ -141,7 +141,7 @@ public class PXML extends QueryModule {
 		for (String condition : conditions) {
 			// create the key (equals() will make sure to match it)
 			ProbabilityCacheKey key = new ProbabilityCacheKey(docName, condition);
-			// use Double to allow null when key is not present
+			// use Double to allow null when key is not present (TODO: test this)
 			Double value = this.probabilityCache.get(key);
 			if (value == null) {
 				// find it in the wsd-list ...
