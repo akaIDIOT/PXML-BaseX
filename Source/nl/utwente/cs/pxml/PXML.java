@@ -5,11 +5,31 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.basex.query.QueryContext;
 import org.basex.query.QueryModule;
+import org.basex.util.InputInfo;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
 public class PXML extends QueryModule {
+
+	protected Map<String, Double> probabilityCache;
+
+	/**
+	 * Acts as a constructor, presumably called for every query to be evaluated
+	 * by the class / an instance of this class.
+	 * 
+	 * @see {@link QueryModule}
+	 */
+	@Override
+	public void init(QueryContext ctx, InputInfo ii) {
+		// do whatever super does in this case
+		super.init(ctx, ii);
+
+		// purge the probability cache by simply creating a new object (also
+		// resetting the size of the cache)
+		this.probabilityCache = new HashMap<String, Double>();
+	}
 
 	/**
 	 * Combines all conditions into a single string keeping only the unique
