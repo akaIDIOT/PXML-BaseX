@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.basex.query.QueryContext;
 import org.basex.query.QueryModule;
+import org.basex.query.item.Str;
 import org.basex.util.InputInfo;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
@@ -40,14 +41,11 @@ public class PXML extends QueryModule {
 	 * @return A single string containing all conditions in the parameters.
 	 */
 	public String combine(String... conditions) {
-		// TODO: would the uniqueness of the strings in the argument not be
-		// enough?
-
 		// create a condition 'container'
-		Set<Condition> result = new HashSet<Condition>(conditions.length);
+		Set<String> result = new HashSet<String>(conditions.length);
 		for (String condition : conditions) {
 			// rely on Set to enforce uniqueness
-			result.add(new Condition(condition));
+			result.add(condition);
 		}
 
 		// join the resulting set on the separator
