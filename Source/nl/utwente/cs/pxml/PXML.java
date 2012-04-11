@@ -7,20 +7,20 @@ import java.util.Set;
 
 import org.basex.query.QueryContext;
 import org.basex.query.QueryModule;
-import org.basex.query.item.Str;
+import org.basex.query.item.ANode;
 import org.basex.util.InputInfo;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
 public class PXML extends QueryModule {
 
-	protected Map<String, Double> probabilityCache;
+	protected Map<ProbabilityCacheKey, Double> probabilityCache;
 
 	/**
 	 * Acts as a constructor, presumably called for every query to be evaluated
 	 * by the class / an instance of this class.
 	 * 
-	 * @see {@link QueryModule}
+	 * @see {@link QueryModule#init(QueryContext, InputInfo)}
 	 */
 	@Override
 	public void init(QueryContext ctx, InputInfo ii) {
@@ -29,7 +29,7 @@ public class PXML extends QueryModule {
 
 		// purge the probability cache by simply creating a new object (also
 		// resetting the size of the cache)
-		this.probabilityCache = new HashMap<String, Double>();
+		this.probabilityCache = new HashMap<ProbabilityCacheKey, Double>();
 	}
 
 	/**
@@ -128,19 +128,100 @@ public class PXML extends QueryModule {
 	 * @return The probability of all conditions being true.
 	 */
 	public double probability(String docName, String... conditions) {
-		// TODO: cache probabilities with (docName, condition) as keys? (static
-		// mapping in PXML?)
-
-		// find the wsd-list in the document
+		// find the wsd-list in the document (TODO)
+		ANode wsdList = null;
 
 		double probability = 1.0;
 		// find probabilities for all conditions, multiply them
 		for (String condition : conditions) {
+			// create the key (equals() will make sure to match it)
+			ProbabilityCacheKey key = new ProbabilityCacheKey(docName, condition);
+			// use Double to allow null when key is not present
+			Double value = this.probabilityCache.get(key);
+			if (value == null) {
+				// find it in the wsd-list ...
+				value = this.probability(wsdList, condition);
+				// ... and cache it for future use
+				this.probabilityCache.put(key, value);
+			}
 
+			// do the probability multiplication
+			probability *= value;
 		}
 
 		// return the result
 		return probability;
+	}
+
+	/**
+	 * Finds a probability for the variable encoded by condition in the wsdList.
+	 * 
+	 * @param wsdList
+	 *            The node containing the probabilities.
+	 * @param condition
+	 *            The condition to match.
+	 * @return The probability of the condition being true.
+	 */
+	protected Double probability(ANode wsdList, String condition) {
+		// find node matching condition (TODO)
+
+		// return its probability
+		return 0.0;
+	}
+
+	public static class ProbabilityCacheKey implements Comparable<ProbabilityCacheKey> {
+
+		// the document this instance belongs to
+		public final String doc;
+		// the variable and its value this instance represents
+		public final String var;
+
+		/**
+		 * Creates a new {@link ProbabilityCacheKey} with the provided document
+		 * and variable keys.
+		 * 
+		 * @param doc
+		 *            The document this instance belongs to.
+		 * @param var
+		 *            The variable and value this instance represents.
+		 */
+		public ProbabilityCacheKey(String doc, String var) {
+			this.doc = doc;
+			this.var = var;
+		}
+
+		/**
+		 * Provides a means of sorting {@link ProbabilityCacheKey}
+		 * alphabetically.
+		 * 
+		 * @see {@link Comparable#compareTo(Object)}
+		 */
+		@Override
+		public int compareTo(ProbabilityCacheKey other) {
+			// make doc more significant for sorting purposes
+			int distance = this.doc.compareTo(other.doc);
+			// only check var distance when docs are equal
+			return distance != 0 ? distance : this.var.compareTo(other.var);
+		}
+
+		/**
+		 * Tests if another object is equal to this one. Specifically whether
+		 * they point to the same document and variable+value, in the case of a
+		 * {@link ProbabilityCacheKey}.
+		 * 
+		 * @see {@link Object#equals(Object)}
+		 */
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof ProbabilityCacheKey) {
+				ProbabilityCacheKey key = (ProbabilityCacheKey) obj;
+				// var assumed to be unequal more often, checked first
+				return this.var.equals(key.var) && this.doc.equals(key.doc);
+			} else {
+				return false;
+			}
+		}
+
 	}
 
 }
