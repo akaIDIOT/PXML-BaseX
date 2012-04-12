@@ -37,7 +37,7 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
-	public String combine(String... conditions) {
+	public String combine(String... conditions) { // TODO: make String... a BaseX Value?
 		// create a condition 'container'
 		Set<String> result = new HashSet<String>(conditions.length);
 		for (String condition : conditions) {
@@ -66,7 +66,7 @@ public class PXML extends QueryModule {
 
 		for (Condition condition : generator) {
 			// rely on Map to enforce uniqueness of name, use Integer as it can
-			// be null (TODO: test this)
+			// be null
 			Integer value = conditions.put(condition.name, condition.value);
 			if (value != null && value != condition.value) {
 				// immediately return false if the name was already encountered
@@ -94,8 +94,6 @@ public class PXML extends QueryModule {
 	public boolean mutuallyExclusive(String a, String b) {
 		ConditionGenerator condA = new ConditionGenerator(a);
 		ConditionGenerator condB = new ConditionGenerator(b);
-		// TODO: is using a map a problem? (possibly breaks comparison
-		// inconsistent strings)
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
 
 		// put all conditions a into the map ...
@@ -130,7 +128,7 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@ContextDependent
-	public double probability(String docName, String... conditions) {
+	public double probability(String docName, String... conditions) { // TODO: make String... a BaseX Value?
 		// find the wsd-list in the document (TODO)
 		ANode wsdList = null;
 
