@@ -65,21 +65,40 @@ public class TestPXML {
 		String set4 = "arg1=1 arg2=2 arg2=2 arg1=1 arg1=2 arg3=0 arg4=1 arg2=4";
 
 		// expect set1 to be consistent
-		Assert.assertEquals(subject.consistent(set1), true);
+		Assert.assertTrue(subject.consistent(set1));
 		// expect set2 to be consistent
-		Assert.assertEquals(subject.consistent(set2), true);
+		Assert.assertTrue(subject.consistent(set2));
 		// expect set3 to be inconsistent
-		Assert.assertEquals(subject.consistent(set3), false);
+		Assert.assertFalse(subject.consistent(set3));
 		// expect set4 to be inconsistent
-		Assert.assertEquals(subject.consistent(set4), false);
+		Assert.assertFalse(subject.consistent(set4));
 	}
 
 	/**
-	 * Tests {@link PXML#mutuallyExclusive(String, String)}.
+	 * Tests {@link PXML#mutuallyExclusive(String, String)} (does *not* test
+	 * consistency in this context).
 	 */
 	@Test
 	public void testMutuallyExclusive() {
-		Assert.fail("Not yet implemented");
+		// consistent twin sets that can both be true (without overlap)
+		String set11 = "arg1=1 arg5=2 arg6=0 arg4=1";
+		String set12 = "arg2=1 arg3=2 arg7=0 arg8=1";
+		// consistent twin sets that can both be true (with overlap)
+		String set21 = "arg1=1 arg5=2 arg6=0 arg4=1";
+		String set22 = "arg1=1 arg2=2 arg6=0 arg3=1";
+		// twin sets that are mutually exclusive
+		String set31 = "arg1=1 arg5=2 arg6=0 arg4=1";
+		String set32 = "arg1=1 arg5=2 arg3=0 arg4=2";
+
+		// expect set1 to not be mutually exclusive (both ways)
+		Assert.assertFalse(subject.mutuallyExclusive(set11, set12));
+		Assert.assertFalse(subject.mutuallyExclusive(set12, set11));
+		// expect set2 to not be mutually exclusive (both ways)
+		Assert.assertFalse(subject.mutuallyExclusive(set21, set22));
+		Assert.assertFalse(subject.mutuallyExclusive(set22, set21));
+		// expect set3 to be mutually exclusive (both ways)
+		Assert.assertTrue(subject.mutuallyExclusive(set31, set32));
+		Assert.assertTrue(subject.mutuallyExclusive(set32, set31));
 	}
 
 	/**
