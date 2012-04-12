@@ -15,6 +15,9 @@ public class TestPXML {
 		this.subject = new PXML();
 	}
 
+	/**
+	 * Tests {@link PXML#combine(String...)}.
+	 */
 	@Test
 	public void testCombine() {
 		// hard code the descriptor length for testing purposes
@@ -47,11 +50,33 @@ public class TestPXML {
 		}
 	}
 
+	/**
+	 * Tests {@link PXML#consistent(String)}.
+	 */
 	@Test
 	public void testConsistent() {
-		Assert.fail("Not yet implemented");
+		// a consistent set of descriptors without duplicates
+		String set1 = "arg1=1 arg2=2 arg3=0 arg4=1";
+		// a consistent set of descriptors with duplicates
+		String set2 = "arg1=1 arg2=2 arg2=2 arg1=1 arg3=0 arg4=1";
+		// an inconsistent set of descriptors without duplicates
+		String set3 = "arg1=1 arg2=2 arg3=0 arg4=1 arg2=1";
+		// an inconsistent set of descriptors with duplicates
+		String set4 = "arg1=1 arg2=2 arg2=2 arg1=1 arg1=2 arg3=0 arg4=1 arg2=4";
+
+		// expect set1 to be consistent
+		Assert.assertEquals(subject.consistent(set1), true);
+		// expect set2 to be consistent
+		Assert.assertEquals(subject.consistent(set2), true);
+		// expect set3 to be inconsistent
+		Assert.assertEquals(subject.consistent(set3), false);
+		// expect set4 to be inconsistent
+		Assert.assertEquals(subject.consistent(set4), false);
 	}
 
+	/**
+	 * Tests {@link PXML#mutuallyExclusive(String, String)}.
+	 */
 	@Test
 	public void testMutuallyExclusive() {
 		Assert.fail("Not yet implemented");
