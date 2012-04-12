@@ -2,6 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="Source"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/BaseX711.jar"/>
+	<classpathentry kind="lib" path="/home/akaidiot/Documents/Projects/PXML-BaseX/lib/BaseX.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

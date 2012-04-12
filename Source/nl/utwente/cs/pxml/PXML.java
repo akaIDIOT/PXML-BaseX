@@ -20,20 +20,11 @@ import nl.utwente.cs.pxml.util.CollectionUtils;
 public class PXML extends QueryModule {
 
 	protected Map<ProbabilityCacheKey, Double> probabilityCache;
-
+	
 	/**
-	 * Acts as a constructor, presumably called for every query to be evaluated
-	 * by the class / an instance of this class.
-	 * 
-	 * @see {@link QueryModule#init(QueryContext, InputInfo)}
+	 * Creates a new PXML instance, with a newly created probability cache. 
 	 */
-	@Override
-	public void init(QueryContext ctx, InputInfo ii) {
-		// do whatever super does in this case
-		super.init(ctx, ii);
-
-		// purge the probability cache by simply creating a new object (also
-		// resetting the size of the cache)
+	public PXML() {
 		this.probabilityCache = new HashMap<ProbabilityCacheKey, Double>();
 	}
 
@@ -45,6 +36,8 @@ public class PXML extends QueryModule {
 	 *            The conditions to be combined.
 	 * @return A single string containing all conditions in the parameters.
 	 */
+	@Requires(Permission.NONE)
+	@Deterministic
 	public String combine(String... conditions) {
 		// create a condition 'container'
 		Set<String> result = new HashSet<String>(conditions.length);
@@ -66,6 +59,8 @@ public class PXML extends QueryModule {
 	 * @return Whether the conditions in the provided condition string are
 	 *         consistent.
 	 */
+	@Requires(Permission.NONE)
+	@Deterministic
 	public boolean consistent(String descriptor) {
 		ConditionGenerator generator = new ConditionGenerator(descriptor);
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
@@ -95,6 +90,8 @@ public class PXML extends QueryModule {
 	 *            The other condition descriptor.
 	 * @return Whether the two condition descriptors are mutually exclusive.
 	 */
+	@Requires(Permission.NONE)
+	@Deterministic
 	public boolean mutuallyExclusive(String a, String b) {
 		ConditionGenerator condA = new ConditionGenerator(a);
 		ConditionGenerator condB = new ConditionGenerator(b);
@@ -132,6 +129,8 @@ public class PXML extends QueryModule {
 	 *            The conditions to look up.
 	 * @return The probability of all conditions being true.
 	 */
+	@Requires(Permission.NONE)
+	@ContextDependent
 	public double probability(String docName, String... conditions) {
 		// find the wsd-list in the document (TODO)
 		ANode wsdList = null;
