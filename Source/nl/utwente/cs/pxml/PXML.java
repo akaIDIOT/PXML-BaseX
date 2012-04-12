@@ -4,11 +4,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
-import org.basex.query.QueryContext;
 import org.basex.query.QueryModule;
 import org.basex.query.item.ANode;
-import org.basex.util.InputInfo;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
@@ -25,7 +24,7 @@ public class PXML extends QueryModule {
 	 * Creates a new PXML instance, with a newly created probability cache. 
 	 */
 	public PXML() {
-		this.probabilityCache = new HashMap<ProbabilityCacheKey, Double>();
+		this.probabilityCache = new TreeMap<ProbabilityCacheKey, Double>();
 	}
 
 	/**
