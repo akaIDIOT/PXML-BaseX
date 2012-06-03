@@ -120,11 +120,10 @@ public class PXML extends QueryModule {
 	/**
 	 * Calculates the probability of all conditions by simply multiplying them
 	 * together. Does *not* check for consistency (which would make the
-	 * probability 0).
+	 * probability 0.0).
 	 * 
-	 * @param docName
-	 *            The document name of the place where the probabilities are
-	 *            stored.
+	 * @param wsdList
+	 *            The node containing the probabilities.
 	 * @param conditions
 	 *            The conditions to look up.
 	 * @return The probability of all conditions being true.
