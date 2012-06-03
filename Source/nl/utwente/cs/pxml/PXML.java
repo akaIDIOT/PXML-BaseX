@@ -8,6 +8,9 @@ import java.util.TreeMap;
 
 import org.basex.query.QueryModule;
 import org.basex.query.item.ANode;
+import org.basex.query.item.QNm;
+
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
@@ -158,10 +161,27 @@ public class PXML extends QueryModule {
 	 *            The condition to match.
 	 * @return The probability of the condition being true.
 	 */
-	protected Double findProbability(ANode wsdList, String condition) {
-		// find node matching condition (TODO)
-
-		// return its probability
+	protected Double findProbability(ANode wsdList, String strCondition) {
+		Condition condition = new Condition(strCondition);
+		// find node matching variable name
+		for (ANode variable : wsdList.children()) {
+			if (condition.name.equals(new String(variable.qname().local()))) {
+				String valName = "val-" + condition.value;
+				// found the right node, now find the right attribute matching variable value
+				for (ANode attr : variable.attributes()) {
+					if (valName.equals(new String(attr.qname().local()))) {
+						// found the right attribute, parse the value as a double
+						// TODO: catch NumberFormatException?
+						return Double.parseDouble(new String(attr.string()));
+					}
+				}
+				
+				// no attribute matching the value was found, return 0.0
+				return 0.0;
+			}
+		}
+		
+		// no node matching the variable was found, return 0.0
 		return 0.0;
 	}
 
