@@ -18,13 +18,13 @@ import nl.utwente.cs.pxml.util.CollectionUtils;
  */
 public class PXML extends QueryModule {
 
-	protected Map<ProbabilityCacheKey, Double> probabilityCache;
+	protected Map<String, Double> probabilityCache;
 
 	/**
 	 * Creates a new PXML instance, with a newly created probability cache.
 	 */
 	public PXML() {
-		this.probabilityCache = new TreeMap<ProbabilityCacheKey, Double>();
+		this.probabilityCache = new TreeMap<String, Double>();
 	}
 
 	/**
@@ -128,22 +128,17 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@ContextDependent
-	public double probability(String docName, String... conditions) { // TODO: make String... a BaseX Value?
-		// find the wsd-list in the document (TODO)
-		ANode wsdList = null;
-
+	public double probability(ANode wsdList, String... conditions) { // TODO: make String... a BaseX Value?
 		double probability = 1.0;
 		// find probabilities for all conditions, multiply them
 		for (String condition : conditions) {
-			// create the key (equals() will make sure to match it)
-			ProbabilityCacheKey key = new ProbabilityCacheKey(docName, condition);
 			// use Double to allow null when key is not present (TODO: test this)
-			Double value = this.probabilityCache.get(key);
+			Double value = this.probabilityCache.get(condition);
 			if (value == null) {
 				// find it in the wsd-list ...
-				value = this.probability(wsdList, condition);
+				value = this.findProbability(wsdList, condition);
 				// ... and cache it for future use
-				this.probabilityCache.put(key, value);
+				this.probabilityCache.put(condition, value);
 			}
 
 			// do the probability multiplication
@@ -163,69 +158,11 @@ public class PXML extends QueryModule {
 	 *            The condition to match.
 	 * @return The probability of the condition being true.
 	 */
-	protected Double probability(ANode wsdList, String condition) {
+	protected Double findProbability(ANode wsdList, String condition) {
 		// find node matching condition (TODO)
 
 		// return its probability
 		return 0.0;
-	}
-
-	/**
-	 * Record used as a key in the probability cache of {@link PXML}.
-	 * 
-	 * @author Mattijs Ugen
-	 */
-	public static class ProbabilityCacheKey implements Comparable<ProbabilityCacheKey> {
-
-		// the document this instance belongs to
-		public final String doc;
-		// the variable and its value this instance represents
-		public final String var;
-
-		/**
-		 * Creates a new {@link ProbabilityCacheKey} with the provided document
-		 * and variable keys.
-		 * 
-		 * @param doc
-		 *            The document this instance belongs to.
-		 * @param var
-		 *            The variable and value this instance represents.
-		 */
-		public ProbabilityCacheKey(String doc, String var) {
-			this.doc = doc;
-			this.var = var;
-		}
-
-		/**
-		 * Provides a means of sorting {@link ProbabilityCacheKey} alphabetically.
-		 * 
-		 * @see {@link Comparable#compareTo(Object)}
-		 */
-		@Override
-		public int compareTo(ProbabilityCacheKey other) {
-			// make doc more significant for sorting purposes
-			int distance = this.doc.compareTo(other.doc);
-			// only check var distance when docs are equal
-			return distance != 0 ? distance : this.var.compareTo(other.var);
-		}
-
-		/**
-		 * Tests if another object is equal to this one. Specifically whether
-		 * they point to the same document and variable+value, in the case of a {@link ProbabilityCacheKey}.
-		 * 
-		 * @see {@link Object#equals(Object)}
-		 */
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof ProbabilityCacheKey) {
-				ProbabilityCacheKey key = (ProbabilityCacheKey) obj;
-				// var assumed to be unequal more often, checked first
-				return this.var.equals(key.var) && this.doc.equals(key.doc);
-			} else {
-				return false;
-			}
-		}
-
 	}
 
 }
