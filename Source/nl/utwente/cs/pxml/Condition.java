@@ -1,8 +1,7 @@
 package nl.utwente.cs.pxml;
 
 /**
- * Record used to represent a variable and its value in
- * {@link PXML#consistent(String)}.
+ * Record used to represent a variable and its value in {@link PXML#consistent(String)}.
  * 
  * @author Mattijs Ugen
  */

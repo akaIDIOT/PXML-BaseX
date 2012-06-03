@@ -23,9 +23,13 @@ public class TestPXML {
 		// hard code the descriptor length for testing purposes
 		int descriptorLength = 6;
 		// simple set of descriptors
-		String[] set1 = { "arg1=1", "arg2=2", "arg1=2", "arg2=1" };
+		String[] set1 = {
+				"arg1=1", "arg2=2", "arg1=2", "arg2=1"
+		};
 		// set of descriptors with a duplicates
-		String[] set2 = { "arg1=1", "arg2=2", "arg2=1", "arg1=2", "arg2=1", "arg1=1" };
+		String[] set2 = {
+				"arg1=1", "arg2=2", "arg2=1", "arg1=2", "arg2=1", "arg1=1"
+		};
 
 		// simple test for determinism
 		Assert.assertEquals(subject.combine(set1), subject.combine(set1));
@@ -102,8 +106,7 @@ public class TestPXML {
 	}
 
 	/**
-	 * Asserts element being a member of collection. Calls
-	 * {@link Assert#fail(String)} otherwise.
+	 * Asserts element being a member of collection. Calls {@link Assert#fail(String)} otherwise.
 	 * 
 	 * @param collection
 	 *            The collection element should be a member of.
@@ -117,8 +120,7 @@ public class TestPXML {
 	}
 
 	/**
-	 * Asserts sub being a substring of string. Calls
-	 * {@link Assert#fail(String)} otherwise.
+	 * Asserts sub being a substring of string. Calls {@link Assert#fail(String)} otherwise.
 	 * 
 	 * @param string
 	 *            The string sub should be a substring of.

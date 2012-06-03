@@ -19,9 +19,9 @@ import nl.utwente.cs.pxml.util.CollectionUtils;
 public class PXML extends QueryModule {
 
 	protected Map<ProbabilityCacheKey, Double> probabilityCache;
-	
+
 	/**
-	 * Creates a new PXML instance, with a newly created probability cache. 
+	 * Creates a new PXML instance, with a newly created probability cache.
 	 */
 	public PXML() {
 		this.probabilityCache = new TreeMap<ProbabilityCacheKey, Double>();
@@ -197,8 +197,7 @@ public class PXML extends QueryModule {
 		}
 
 		/**
-		 * Provides a means of sorting {@link ProbabilityCacheKey}
-		 * alphabetically.
+		 * Provides a means of sorting {@link ProbabilityCacheKey} alphabetically.
 		 * 
 		 * @see {@link Comparable#compareTo(Object)}
 		 */
@@ -212,8 +211,7 @@ public class PXML extends QueryModule {
 
 		/**
 		 * Tests if another object is equal to this one. Specifically whether
-		 * they point to the same document and variable+value, in the case of a
-		 * {@link ProbabilityCacheKey}.
+		 * they point to the same document and variable+value, in the case of a {@link ProbabilityCacheKey}.
 		 * 
 		 * @see {@link Object#equals(Object)}
 		 */

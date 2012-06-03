@@ -3,7 +3,7 @@ package nl.utwente.cs.pxml.util;
 import java.util.Iterator;
 
 /**
- * Utility class capable of doing some cumbersome things with collections. 
+ * Utility class capable of doing some cumbersome things with collections.
  * 
  * @author Mattijs Ugen
  */
