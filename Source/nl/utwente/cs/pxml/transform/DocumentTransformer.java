@@ -65,7 +65,6 @@ public class DocumentTransformer {
 			while (in.hasNext()) {
 				out.add(in.nextEvent());
 			}
-			out.flush(); // TODO: needed before close() ?
 			out.close();
 		} catch (XMLStreamException e) {
 			throw new DocumentTransformerException("error parsing xml stream: " + e.getMessage(), e);

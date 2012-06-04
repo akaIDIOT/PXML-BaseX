@@ -1,5 +1,5 @@
 (:
-	Module containing functions to deal with probablistic XML. 
+	Module containing functions to deal with probabilistic XML. 
 :)
 
 (: use Maurice van Keulen's home page as module namespace for the time being :)

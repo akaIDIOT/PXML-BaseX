@@ -15,12 +15,20 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
 /**
- * Importable query module containing functions for use with probablistic XML.
+ * Importable query module containing functions for use with probabilistic XML.
  * 
  * @author Mattijs Ugen
  */
 public class PXML extends QueryModule {
 
+	/**
+	 * The namespace used for elements dealing with probability in the a document.
+	 */
+	public static final String NAMESPACE = "http://www.utwente.nl/~keulen/pxml/";
+
+	/**
+	 * Mapping used to cache probabilities for conditions encountered earlier.
+	 */
 	protected Map<String, Double> probabilityCache;
 
 	/**
@@ -174,12 +182,12 @@ public class PXML extends QueryModule {
 						return Double.parseDouble(new String(attr.string()));
 					}
 				}
-				
+
 				// no attribute matching the value was found, return 0.0
 				return 0.0;
 			}
 		}
-		
+
 		// no node matching the variable was found, return 0.0
 		return 0.0;
 	}
