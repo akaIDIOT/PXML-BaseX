@@ -8,7 +8,7 @@ import javax.xml.stream.events.Namespace;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import nl.utwente.cs.pxml.util.ArrayIterator;
+import nl.utwente.cs.pxml.util.CompoundIterator;
 
 public class DocumentTransformer {
 
@@ -35,17 +35,18 @@ public class DocumentTransformer {
 			// current is now a StartElement representing the root element, add the namespace to it
 			StartElement root = this.addNamespaces(current.asStartElement(), events.createNamespace(NS_PREFIX, NS_URI));
 			out.add(root);
-			
+
 			// children of root are next, proceed with probability elements insertion
 			// TODO
 		} catch (XMLStreamException e) {
 			throw new DocumentTransformerException("error parsing xml stream: " + e.getMessage(), e);
 		}
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	public StartElement addNamespaces(StartElement element, Namespace... namespaces) {
-		return this.events
-				.createStartElement(element.getName(), element.getAttributes(), new ArrayIterator(namespaces));
+		return this.events.createStartElement(element.getName(), element.getAttributes(), new CompoundIterator<Object>(
+				element.getNamespaces(), (Object[]) namespaces));
 	}
 
 }
