@@ -4,9 +4,15 @@ import static nl.utwente.cs.pxml.ProbabilityNodeType.EVENTS;
 import static nl.utwente.cs.pxml.ProbabilityNodeType.INDEPENDENT;
 import static nl.utwente.cs.pxml.ProbabilityNodeType.MUTEX;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLEventWriter;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Namespace;
@@ -108,6 +114,19 @@ public class DocumentTransformer {
 	public StartElement addNamespaces(StartElement element, Namespace... namespaces) {
 		return this.events.createStartElement(element.getName(), element.getAttributes(), new CompoundIterator<Object>(
 				element.getNamespaces(), (Object[]) namespaces));
+	}
+
+	public static void main(String... args) {
+		try {
+			XMLEventReader in = XMLInputFactory.newInstance().createXMLEventReader(
+					new FileInputStream(new File("/tmp/input.xml")));
+			XMLEventWriter out = XMLOutputFactory.newInstance().createXMLEventWriter(
+					new FileOutputStream(new File("/tmp/output.xml")));
+
+			new DocumentTransformer().transform(in, out);
+		} catch (Exception e) { // IEUW!
+			e.printStackTrace();
+		}
 	}
 
 }
