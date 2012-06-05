@@ -322,7 +322,7 @@ public class DocumentTransformer {
 	 */
 	protected void insertEventsAttributes(Document origin, Element pNode, int numVariables) {
 		// determine number of vars to use (max log_2(total vars), min 1)
-		int numUsed = 1 + this.random.nextInt((int) (Math.log(numVariables) / Math.log(2)));
+		int numUsed = numVariables == 1 ? 1 : 1 + this.random.nextInt((int) Math.round((Math.log(numVariables) / Math.log(2))));
 
 		// create list of available variables
 		List<Integer> toUse = new ArrayList<Integer>(numVariables);
