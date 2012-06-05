@@ -8,6 +8,8 @@ import static nl.utwente.cs.pxml.ProbabilityNodeType.MUTEX;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -67,7 +69,7 @@ public class DocumentTransformer {
 			// (...) and make sure it knows about the namespaces used in the document
 			xpath.setNamespaceContext(new NamespaceResolver(doc));
 
-			// find all the nodes in the document element (make sure to not wrap the root)
+			// find all the nodes in the document element (make sure to not wrap the root (TODO: does this work?))
 			NodeList nodes = (NodeList) xpath.evaluate("//*", doc.getDocumentElement(), XPathConstants.NODESET);
 			int length = nodes.getLength();
 			System.out.println("  document has " + length + " cadidate nodes");
@@ -85,7 +87,7 @@ public class DocumentTransformer {
 				Node firstSelected = selected.get(0);
 				firstSelected.getParentNode().replaceChild(pNode, firstSelected);
 				// attach all the selected nodes to the pNode now in the document
-				// (appending a node will move it if it is already in the DOM (TODO: check this))
+				// (appending a node will move it if it is already in the DOM
 				for (Node node : selected) {
 					pNode.appendChild(node);
 				}
@@ -125,7 +127,7 @@ public class DocumentTransformer {
 			System.out.println("  inserted " + events.getLength() + " event conjunction pNodes as <" + NS_PREFIX + ":" + EVENTS.nodeName + ">");
 			for (int i = 0, max = events.getLength(); i < max; i++) {
 				Element pNode = (Element) events.item(i);
-				this.insertEventsAttributes(doc, pNode, numVariables); // TODO: count only the actual elements?
+				this.insertEventsAttributes(doc, pNode, numVariables);
 			}
 
 			// add the used random variables to the document
@@ -225,10 +227,16 @@ public class DocumentTransformer {
 		// determine number of vars to use (max log_2(total vars), min 1)
 		int numUsed = 1; // TODO: randomize between 1 and log_2(total vars)
 
+		// create list of available variables
+		List<Integer> toUse = new ArrayList<Integer>(numVariables);
+		for (int i = 0; i < numVariables; i++) {
+			toUse.add(i);
+		}
+		// randomize the list
+		Collections.shuffle(toUse);
 		for (int i = 0; i < numUsed; i++) {
-			// add 'requirement' for a variable to be either true or false
-			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + ((int) (Math.random() * numVariables)),
-					Math.random() > 0.5 ? "1" : "0");
+			// add 'requirement' for a variable to be either true or false (using the numUsed first items in toUse)
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + toUse.get(i), Math.random() > 0.5 ? "1" : "0");
 		}
 	}
 
