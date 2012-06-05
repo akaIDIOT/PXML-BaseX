@@ -25,6 +25,7 @@ import javax.xml.xpath.XPathFactory;
 import nl.utwente.cs.pxml.ProbabilityNodeType;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -44,7 +45,7 @@ public class DocumentTransformer {
 	// the number of random variables relative to the expected number of EVENT-type pNodes
 	protected float pVariablesRatio = 0.1f;
 
-	// TODO: incorporate _ratioExpSubsets, _maxExpSubsetsPwr and _ratioCieRVars from XMLToPXMLTransformer.java
+	// TODO: incorporate _ratioExpSubsets, and _maxExpSubsetsPwr from XMLToPXMLTransformer.java
 
 	protected XPath xpath;
 
@@ -62,7 +63,7 @@ public class DocumentTransformer {
 		try {
 			// add the pxml namespace to the document
 			doc.getDocumentElement().setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + NS_PREFIX, NS_URI);
-			
+
 			// find all the nodes in the document element (make sure to not wrap the root)
 			NodeList nodes = (NodeList) xpath.evaluate("//*", doc.getDocumentElement(), XPathConstants.NODESET);
 			int length = nodes.getLength();
@@ -87,7 +88,15 @@ public class DocumentTransformer {
 			}
 
 			// add the used random variables to the document
-			// TODO
+			Node varList = doc.createElementNS(NS_URI, NS_PREFIX + ":vars");
+			for (int i = 0; i < numVariables; i++) {
+				Element var = doc.createElementNS(NS_URI, NS_PREFIX + ":var" + i);
+				double probability = Math.random();
+				var.setAttributeNS(NS_URI, NS_PREFIX + ":val-0", "" + (1.0 - probability));
+				var.setAttributeNS(NS_URI, NS_PREFIX + ":val-1", "" + probability);
+				varList.appendChild(var);
+			}
+			doc.getDocumentElement().appendChild(varList);
 		} catch (XPathException e) {
 			throw new DocumentTransformerException("Unexpected XPath error while transforming: " + e.getMessage(), e);
 		}
@@ -103,7 +112,8 @@ public class DocumentTransformer {
 		}
 
 		// calculate the number of variables from the number of expected EVENTS-type pNodes
-		return (int) (numNodes * pNodesOccurrence * ((float) occurrence / this.pNodeDistribution.length) * this.pVariablesRatio);
+		return (int) Math.max(numNodes * pNodesOccurrence * ((float) occurrence / this.pNodeDistribution.length)
+				* this.pVariablesRatio, 1);
 	}
 
 	protected List<Node> selectNodes(Node el) {
@@ -143,16 +153,18 @@ public class DocumentTransformer {
 		ProbabilityNodeType type = this.pNodeDistribution[(int) (Math.random() * this.pNodeDistribution.length)];
 		// create a new node of the required type
 		Node node = origin.createElementNS(NS_URI, NS_PREFIX + ":" + type.nodeName);
-		
+
 		// return the newly created node
 		return node;
 	}
-	
+
 	public static void main(String... args) {
 		try {
-			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new File("/tmp/input.xml"));
+			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+					.parse(new File("/tmp/input.xml"));
 			new DocumentTransformer().transform(input);
-			TransformerFactory.newInstance().newTransformer().transform(new DOMSource(input), new StreamResult(new File("/tmp/output.xml")));
+			TransformerFactory.newInstance().newTransformer()
+					.transform(new DOMSource(input), new StreamResult(new File("/tmp/output.xml")));
 		} catch (SAXException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
