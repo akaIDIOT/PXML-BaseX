@@ -8,9 +8,9 @@ import static nl.utwente.cs.pxml.ProbabilityNodeType.MUTEX;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -50,7 +50,10 @@ public class DocumentTransformer {
 
 	// TODO: incorporate _ratioExpSubsets, and _maxExpSubsetsPwr from XMLToPXMLTransformer.java
 
+	protected Random random;
+	
 	public DocumentTransformer() {
+		this.random = new Random();
 	}
 
 	public DocumentTransformer(float pNodesOccurrence, ProbabilityNodeType[] pNodeDistribution) {
@@ -208,14 +211,22 @@ public class DocumentTransformer {
 	}
 
 	protected void insertMutexAttributes(Document origin, Element pNode, int numChilds) {
-		// TODO: create p-distribution for num + 1 items
-		double[] distribution = new double[numChilds + 1];
+		// create a distribution of random numbers
+		int[] distribution = new int[numChilds + 1];
+		// keep track of the sum
+		long sum = 0;
+		for (int i = 0, amount = distribution.length; i < amount; i++) {
+			// make sure to only use positive numbers
+			int value = Math.abs(this.random.nextInt());
+			distribution[i] = value;
+			sum += value;
+		}
 
-		// add probability for no child
-		pNode.setAttributeNS(NS_URI, NS_PREFIX + ":none", "" + distribution[0]);
+		// add probability for no child (cast to double to force floating point result)
+		pNode.setAttributeNS(NS_URI, NS_PREFIX + ":none", "" + distribution[0] / (double) sum);
 		for (int i = 1; i <= numChilds; i++) {
 			// add probability for child i
-			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":child-" + i, "" + distribution[i]);
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":child-" + i, "" + distribution[i] / (double) sum);
 		}
 	}
 
