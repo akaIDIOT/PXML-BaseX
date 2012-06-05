@@ -40,7 +40,7 @@ public class DocumentTransformer {
 	// array of probability node types (more occurrences will make the type more likely to be picked, taken from
 	// XMLToPXMLTransformer.java)
 	protected ProbabilityNodeType[] pNodeDistribution = {
-			MUTEX, MUTEX, MUTEX, MUTEX, INDEPENDENT, INDEPENDENT, INDEPENDENT, INDEPENDENT, EVENTS
+			EVENTS//MUTEX, MUTEX, MUTEX, MUTEX, INDEPENDENT, INDEPENDENT, INDEPENDENT, INDEPENDENT, EVENTS
 	};
 	// the number of random variables relative to the expected number of EVENT-type pNodes
 	protected float pVariablesRatio = 0.1f;
@@ -90,7 +90,7 @@ public class DocumentTransformer {
 			// add the used random variables to the document
 			Node varList = doc.createElementNS(NS_URI, NS_PREFIX + ":vars");
 			for (int i = 0; i < numVariables; i++) {
-				Element var = doc.createElementNS(NS_URI, NS_PREFIX + ":var" + i);
+				Element var = doc.createElementNS(NS_URI, NS_PREFIX + ":var-" + i);
 				double probability = Math.random();
 				var.setAttributeNS(NS_URI, NS_PREFIX + ":val-0", "" + (1.0 - probability));
 				var.setAttributeNS(NS_URI, NS_PREFIX + ":val-1", "" + probability);
@@ -152,10 +152,60 @@ public class DocumentTransformer {
 		// select a type at random
 		ProbabilityNodeType type = this.pNodeDistribution[(int) (Math.random() * this.pNodeDistribution.length)];
 		// create a new node of the required type
-		Node node = origin.createElementNS(NS_URI, NS_PREFIX + ":" + type.nodeName);
+		Element pNode = origin.createElementNS(NS_URI, NS_PREFIX + ":" + type.nodeName);
+
+		// add attributes based on selected pNode type
+		switch (type) {
+			case INDEPENDENT:
+				this.insertIndependantAttributes(origin, pNode, numChilds);
+				break;
+			case MUTEX:
+				this.insertMutexAttributes(origin, pNode, numChilds);
+				break;
+			case EXPLICIT:
+				this.insertExplicitAttributes(origin, pNode, numChilds);
+				break;
+			case EVENTS:
+				this.insertEventsAttributes(origin, pNode, numVariables);
+				break;
+		}
 
 		// return the newly created node
-		return node;
+		return pNode;
+	}
+
+	protected void insertIndependantAttributes(Document origin, Element pNode, int numChilds) {
+		for (int i = 1; i <= numChilds; i++) {
+			// add a p:child-i probability for each child
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":child-" + i, "" + Math.random());
+		}
+	}
+
+	protected void insertMutexAttributes(Document origin, Element pNode, int numChilds) {
+		// TODO: create p-distribution for num + 1 items
+		double[] distribution = new double[numChilds + 1];
+
+		// add probability for no child
+		pNode.setAttributeNS(NS_URI, NS_PREFIX + ":none", "" + distribution[0]);
+		for (int i = 1; i <= numChilds; i++) {
+			// add probability for child i
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":child-" + i, "" + distribution[i]);
+		}
+	}
+
+	protected void insertExplicitAttributes(Document origin, Element pNode, int numChilds) {
+		// TODO
+	}
+
+	protected void insertEventsAttributes(Document origin, Element pNode, int numVariables) {
+		// determine number of vars to use (max log_2(total vars), min 1)
+		int numUsed = 1; // TODO: randomize between 1 and log_2(total vars)
+
+		for (int i = 0; i < numUsed; i++) {
+			// add 'requirement' for a variable to be either true or false
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + ((int) (Math.random() * numVariables)),
+					Math.random() > 0.5 ? "1" : "0");
+		}
 	}
 
 	public static void main(String... args) {
