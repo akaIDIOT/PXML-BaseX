@@ -35,7 +35,9 @@ import org.xml.sax.SAXException;
 
 public class DocumentTransformer {
 
+	// the prefix used for the probability namespace
 	public static final String NS_PREFIX = "p";
+	// the uri used for the probability namespace
 	public static final String NS_URI = "http://www.utwente.nl/~keulen/pxml/";
 
 	// how often probability nodes will occur (0.0: never, 1.0: at every chance, taken from XMLToPXMLTransformer.java)
@@ -51,17 +53,40 @@ public class DocumentTransformer {
 	// TODO: incorporate _ratioExpSubsets, and _maxExpSubsetsPwr from XMLToPXMLTransformer.java
 
 	protected Random random;
-	
+
+	/**
+	 * Creates a new DocumentTransformer using the default distribution ratios specified.
+	 */
 	public DocumentTransformer() {
 		this.random = new Random();
 	}
 
-	public DocumentTransformer(float pNodesOccurrence, ProbabilityNodeType[] pNodeDistribution) {
+	/**
+	 * Creates a new DocumentTransformer using the provided distribution ratios.
+	 * 
+	 * @param pNodesOccurrence
+	 *            Ratio of pNodes compared to the total number of nodes in a document.
+	 * @param pNodeDistribution
+	 *            Relative occurrence of pNode types, encoded as an array of types (values can occur multiple times).
+	 * @param pVariablesRatio
+	 *            Ratio of variables to use compared to the number of expected EVENT-type pNodes.
+	 */
+	public DocumentTransformer(float pNodesOccurrence, ProbabilityNodeType[] pNodeDistribution, float pVariablesRatio) {
 		this();
 		this.pNodesOccurrence = pNodesOccurrence;
 		this.pNodeDistribution = pNodeDistribution;
+		this.pVariablesRatio = pVariablesRatio;
 	}
 
+	/**
+	 * Overlays a multiverse of possible worlds over a given document using node types defined when this
+	 * DocumentTransformer was constructed.
+	 * 
+	 * @param doc
+	 *            The document to process.
+	 * @throws DocumentTransformerException
+	 *             When an XML or XPath error occurs while processing.
+	 */
 	public void transform(Document doc) throws DocumentTransformerException {
 		try {
 			// add the pxml namespace to the document
@@ -81,11 +106,11 @@ public class DocumentTransformer {
 
 			// select length * occurrence nodes at random
 			for (int i = 0, max = (int) (length * this.pNodesOccurrence); i < max; i++) {
-				Node el = nodes.item((int) (Math.random() * length));
+				Node el = nodes.item(this.random.nextInt(length));
 				// select a random number of preceding/following siblings to wrap together
 				List<Node> selected = this.selectNodes(el);
 				// create a pNode to wrap the selected elements with (make sure to create exactly enough attributes)
-				Node pNode = this.createPNode(doc, selected.size(), numVariables);
+				Node pNode = this.createPNode(doc);
 				// replace the first selected node with the newly created pNode
 				Node firstSelected = selected.get(0);
 				firstSelected.getParentNode().replaceChild(pNode, firstSelected);
@@ -100,7 +125,8 @@ public class DocumentTransformer {
 			// be done when inserting)
 			NodeList independents = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + INDEPENDENT.nodeName,
 					doc.getDocumentElement(), XPathConstants.NODESET);
-			System.out.println("  inserted " + independents.getLength() + " independent pNodes as <" + NS_PREFIX + ":" + INDEPENDENT.nodeName + ">");
+			System.out.println("  inserted " + independents.getLength() + " independent pNodes as <" + NS_PREFIX + ":"
+					+ INDEPENDENT.nodeName + ">");
 			for (int i = 0, max = independents.getLength(); i < max; i++) {
 				Element pNode = (Element) independents.item(i);
 				this.insertIndependantAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
@@ -109,7 +135,8 @@ public class DocumentTransformer {
 
 			NodeList mutexes = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + MUTEX.nodeName,
 					doc.getDocumentElement(), XPathConstants.NODESET);
-			System.out.println("  inserted " + mutexes.getLength() + " mutex pNodes as <" + NS_PREFIX + ":" + MUTEX.nodeName + ">");
+			System.out.println("  inserted " + mutexes.getLength() + " mutex pNodes as <" + NS_PREFIX + ":"
+					+ MUTEX.nodeName + ">");
 			for (int i = 0, max = mutexes.getLength(); i < max; i++) {
 				Element pNode = (Element) mutexes.item(i);
 				this.insertMutexAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
@@ -118,7 +145,8 @@ public class DocumentTransformer {
 
 			NodeList explicits = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + EXPLICIT.nodeName,
 					doc.getDocumentElement(), XPathConstants.NODESET);
-			System.out.println("  inserted " + explicits.getLength() + " explicit pNodes as <" + NS_PREFIX + ":" + EXPLICIT.nodeName + ">");
+			System.out.println("  inserted " + explicits.getLength() + " explicit pNodes as <" + NS_PREFIX + ":"
+					+ EXPLICIT.nodeName + ">");
 			for (int i = 0, max = explicits.getLength(); i < max; i++) {
 				Element pNode = (Element) explicits.item(i);
 				this.insertExplicitAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
@@ -127,7 +155,8 @@ public class DocumentTransformer {
 
 			NodeList events = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + EVENTS.nodeName,
 					doc.getDocumentElement(), XPathConstants.NODESET);
-			System.out.println("  inserted " + events.getLength() + " event conjunction pNodes as <" + NS_PREFIX + ":" + EVENTS.nodeName + ">");
+			System.out.println("  inserted " + events.getLength() + " event conjunction pNodes as <" + NS_PREFIX + ":"
+					+ EVENTS.nodeName + ">");
 			for (int i = 0, max = events.getLength(); i < max; i++) {
 				Element pNode = (Element) events.item(i);
 				this.insertEventsAttributes(doc, pNode, numVariables);
@@ -137,7 +166,7 @@ public class DocumentTransformer {
 			Node varList = doc.createElementNS(NS_URI, NS_PREFIX + ":vars");
 			for (int i = 0; i < numVariables; i++) {
 				Element var = doc.createElementNS(NS_URI, NS_PREFIX + ":var-" + i);
-				double probability = Math.random();
+				double probability = this.random.nextDouble();
 				var.setAttributeNS(NS_URI, NS_PREFIX + ":val-0", "" + (1.0 - probability));
 				var.setAttributeNS(NS_URI, NS_PREFIX + ":val-1", "" + probability);
 				varList.appendChild(var);
@@ -148,6 +177,14 @@ public class DocumentTransformer {
 		}
 	}
 
+	/**
+	 * Determines the number of variables to use for the processing of a particular number of available nodes using the
+	 * settings provided when this DocumentTransformer was creted.
+	 * 
+	 * @param numNodes
+	 *            The total number of available nodes in a document.
+	 * @return The number of variables to be used when processing a document with the given amount of nodes.
+	 */
 	protected int determineNumVariables(int numNodes) {
 		// count the number of times EVENTS occurs in the distribution
 		int occurrence = 0;
@@ -158,10 +195,18 @@ public class DocumentTransformer {
 		}
 
 		// calculate the number of variables from the number of expected EVENTS-type pNodes
-		return (int) Math.max(numNodes * pNodesOccurrence * ((float) occurrence / this.pNodeDistribution.length)
+		return (int) Math.max(numNodes * pNodesOccurrence * ((double) occurrence / this.pNodeDistribution.length)
 				* this.pVariablesRatio, 1);
 	}
 
+	/**
+	 * Selects a list of nodes that are siblings of the given node to be wrapped by a pNode. A minimum number of 1
+	 * elements are selected (the node itself). The total number of siblings is the maximum number of nodes selected.
+	 * 
+	 * @param el
+	 *            The selected element.
+	 * @return A list of siblings of el (including el itself).
+	 */
 	protected List<Node> selectNodes(Node el) {
 		// default to child index 0 (...)
 		int index = 0;
@@ -174,8 +219,8 @@ public class DocumentTransformer {
 			}
 		}
 
-		// determine the number of siblings to select (× 2 to get the *average* at pNodesSiblings)
-		int numSiblings = (int) (Math.random() * children.getLength());
+		// determine the number of siblings to select
+		int numSiblings = this.random.nextInt(children.getLength());
 		// make sure to not select too many elements but at least one
 		numSiblings = Math.max(Math.min(numSiblings, children.getLength()), 1);
 
@@ -194,22 +239,49 @@ public class DocumentTransformer {
 		return selected;
 	}
 
-	protected Node createPNode(Document origin, int numChilds, int numVariables) {
+	/**
+	 * Creates a random pNode chosen from the distribution provided when this DocumentTransformer was constructed.
+	 * 
+	 * @param origin
+	 *            The source document, used to create a new node.
+	 * @return A newly created, randomly selected pNode.
+	 */
+	protected Node createPNode(Document origin) {
 		// select a type at random
-		ProbabilityNodeType type = this.pNodeDistribution[(int) (Math.random() * this.pNodeDistribution.length)];
+		ProbabilityNodeType type = this.pNodeDistribution[this.random.nextInt(this.pNodeDistribution.length)];
 		// create a new node of the required type
 		Element pNode = origin.createElementNS(NS_URI, NS_PREFIX + ":" + type.nodeName);
 		// return the newly created node
 		return pNode;
 	}
 
+	/**
+	 * Inserts numChilds attributes into pNode representing independent chances for pNode's children.
+	 * 
+	 * @param origin
+	 *            The source document, used to create attributes.
+	 * @param pNode
+	 *            The node to add attributes to.
+	 * @param numChilds
+	 *            The number of childs of pNode.
+	 */
 	protected void insertIndependantAttributes(Document origin, Element pNode, int numChilds) {
 		for (int i = 1; i <= numChilds; i++) {
 			// add a p:child-i probability for each child
-			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":child-" + i, "" + Math.random());
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":child-" + i, "" + this.random.nextDouble());
 		}
 	}
 
+	/**
+	 * Inserts numChilds + 1 attributes into pNode representing the chances of none or a single child.
+	 * 
+	 * @param origin
+	 *            The source document, used to create attributes.
+	 * @param pNode
+	 *            The node to add attributes to.
+	 * @param numChilds
+	 *            The number childs of pNode.
+	 */
 	protected void insertMutexAttributes(Document origin, Element pNode, int numChilds) {
 		// create a distribution of random numbers
 		int[] distribution = new int[numChilds + 1];
@@ -230,14 +302,28 @@ public class DocumentTransformer {
 		}
 	}
 
+	/**
+	 * Unimplemented.
+	 */
 	protected void insertExplicitAttributes(Document origin, Element pNode, int numChilds) {
 		// TODO
 	}
 
+	/**
+	 * Inserts a number of predicate attributes into pNode, representing values of random variables. The number of
+	 * variables used varies between 1 and log_2(total number of available variables).
+	 * 
+	 * @param origin
+	 *            The source documents, used to create attributes.
+	 * @param pNode
+	 *            The node to add attributes to.
+	 * @param numVariables
+	 *            The total number of available variables.
+	 */
 	protected void insertEventsAttributes(Document origin, Element pNode, int numVariables) {
 		// determine number of vars to use (max log_2(total vars), min 1)
-		int numUsed = 1 + (int) (Math.random() * Math.log(numVariables) / Math.log(2));
-		
+		int numUsed = 1 + this.random.nextInt((int) (Math.log(numVariables) / Math.log(2)));
+
 		// create list of available variables
 		List<Integer> toUse = new ArrayList<Integer>(numVariables);
 		for (int i = 0; i < numVariables; i++) {
@@ -247,14 +333,21 @@ public class DocumentTransformer {
 		Collections.shuffle(toUse);
 		for (int i = 0; i < numUsed; i++) {
 			// add 'requirement' for a variable to be either true or false (using the numUsed first items in toUse)
-			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + toUse.get(i), Math.random() > 0.5 ? "1" : "0");
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + toUse.get(i), this.random.nextBoolean() ? "1" : "0");
 		}
 	}
 
+	/**
+	 * Utility method to test DocumentTransformer. Reads a document from /tmp/input.xml and writes the document with a
+	 * probabilistic overlay to /tmp/output.xml).
+	 * 
+	 * @param args
+	 *            Unused.
+	 */
 	public static void main(String... args) {
 		try {
 			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-					.parse(new File("/home/akaidiot/Documents/Projects/PXML-BaseX/res/data/XMark-D.xml"));
+					.parse(new File("/tmp/input.xml"));
 			new DocumentTransformer().transform(input);
 			TransformerFactory.newInstance().newTransformer()
 					.transform(new DOMSource(input), new StreamResult(new File("/tmp/output.xml")));
