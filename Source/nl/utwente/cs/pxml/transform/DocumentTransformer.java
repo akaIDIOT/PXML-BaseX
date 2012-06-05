@@ -1,6 +1,7 @@
 package nl.utwente.cs.pxml.transform;
 
 import static nl.utwente.cs.pxml.ProbabilityNodeType.EVENTS;
+import static nl.utwente.cs.pxml.ProbabilityNodeType.EXPLICIT;
 import static nl.utwente.cs.pxml.ProbabilityNodeType.INDEPENDENT;
 import static nl.utwente.cs.pxml.ProbabilityNodeType.MUTEX;
 
@@ -40,17 +41,14 @@ public class DocumentTransformer {
 	// array of probability node types (more occurrences will make the type more likely to be picked, taken from
 	// XMLToPXMLTransformer.java)
 	protected ProbabilityNodeType[] pNodeDistribution = {
-			EVENTS//MUTEX, MUTEX, MUTEX, MUTEX, INDEPENDENT, INDEPENDENT, INDEPENDENT, INDEPENDENT, EVENTS
+			MUTEX, MUTEX, MUTEX, MUTEX, INDEPENDENT, INDEPENDENT, INDEPENDENT, INDEPENDENT, EVENTS
 	};
 	// the number of random variables relative to the expected number of EVENT-type pNodes
 	protected float pVariablesRatio = 0.1f;
 
 	// TODO: incorporate _ratioExpSubsets, and _maxExpSubsetsPwr from XMLToPXMLTransformer.java
 
-	protected XPath xpath;
-
 	public DocumentTransformer() {
-		this.xpath = XPathFactory.newInstance().newXPath();
 	}
 
 	public DocumentTransformer(float pNodesOccurrence, ProbabilityNodeType[] pNodeDistribution) {
@@ -64,11 +62,17 @@ public class DocumentTransformer {
 			// add the pxml namespace to the document
 			doc.getDocumentElement().setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + NS_PREFIX, NS_URI);
 
+			// create a new xpath object (...)
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			// (...) and make sure it knows about the namespaces used in the document
+			xpath.setNamespaceContext(new NamespaceResolver(doc));
+
 			// find all the nodes in the document element (make sure to not wrap the root)
 			NodeList nodes = (NodeList) xpath.evaluate("//*", doc.getDocumentElement(), XPathConstants.NODESET);
 			int length = nodes.getLength();
-			int numVariables = this.determineNumVariables(length);
 			System.out.println("  document has " + length + " cadidate nodes");
+			int numVariables = this.determineNumVariables(length);
+			System.out.println("  will use " + numVariables + " random variables");
 
 			// select length * occurrence nodes at random
 			for (int i = 0, max = (int) (length * this.pNodesOccurrence); i < max; i++) {
@@ -85,6 +89,43 @@ public class DocumentTransformer {
 				for (Node node : selected) {
 					pNode.appendChild(node);
 				}
+			}
+
+			// fetch all pNode type elements from the document and add attributes (due to DOM modification, this can not
+			// be done when inserting)
+			NodeList independents = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + INDEPENDENT.nodeName,
+					doc.getDocumentElement(), XPathConstants.NODESET);
+			System.out.println("  inserted " + independents.getLength() + " independent pNodes as <" + NS_PREFIX + ":" + INDEPENDENT.nodeName + ">");
+			for (int i = 0, max = independents.getLength(); i < max; i++) {
+				Element pNode = (Element) independents.item(i);
+				this.insertIndependantAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
+																									// actual elements?
+			}
+
+			NodeList mutexes = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + MUTEX.nodeName,
+					doc.getDocumentElement(), XPathConstants.NODESET);
+			System.out.println("  inserted " + mutexes.getLength() + " mutex pNodes as <" + NS_PREFIX + ":" + MUTEX.nodeName + ">");
+			for (int i = 0, max = mutexes.getLength(); i < max; i++) {
+				Element pNode = (Element) mutexes.item(i);
+				this.insertMutexAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
+																							// actual elements?
+			}
+
+			NodeList explicits = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + EXPLICIT.nodeName,
+					doc.getDocumentElement(), XPathConstants.NODESET);
+			System.out.println("  inserted " + explicits.getLength() + " explicit pNodes as <" + NS_PREFIX + ":" + EXPLICIT.nodeName + ">");
+			for (int i = 0, max = explicits.getLength(); i < max; i++) {
+				Element pNode = (Element) explicits.item(i);
+				this.insertExplicitAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
+																								// actual elements?
+			}
+
+			NodeList events = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + EVENTS.nodeName,
+					doc.getDocumentElement(), XPathConstants.NODESET);
+			System.out.println("  inserted " + events.getLength() + " event conjunction pNodes as <" + NS_PREFIX + ":" + EVENTS.nodeName + ">");
+			for (int i = 0, max = events.getLength(); i < max; i++) {
+				Element pNode = (Element) events.item(i);
+				this.insertEventsAttributes(doc, pNode, numVariables); // TODO: count only the actual elements?
 			}
 
 			// add the used random variables to the document
@@ -153,23 +194,6 @@ public class DocumentTransformer {
 		ProbabilityNodeType type = this.pNodeDistribution[(int) (Math.random() * this.pNodeDistribution.length)];
 		// create a new node of the required type
 		Element pNode = origin.createElementNS(NS_URI, NS_PREFIX + ":" + type.nodeName);
-
-		// add attributes based on selected pNode type
-		switch (type) {
-			case INDEPENDENT:
-				this.insertIndependantAttributes(origin, pNode, numChilds);
-				break;
-			case MUTEX:
-				this.insertMutexAttributes(origin, pNode, numChilds);
-				break;
-			case EXPLICIT:
-				this.insertExplicitAttributes(origin, pNode, numChilds);
-				break;
-			case EVENTS:
-				this.insertEventsAttributes(origin, pNode, numVariables);
-				break;
-		}
-
 		// return the newly created node
 		return pNode;
 	}
@@ -211,7 +235,7 @@ public class DocumentTransformer {
 	public static void main(String... args) {
 		try {
 			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-					.parse(new File("/tmp/input.xml"));
+					.parse(new File("/home/akaidiot/Documents/Projects/PXML-BaseX/res/data/XMark-D.xml"));
 			new DocumentTransformer().transform(input);
 			TransformerFactory.newInstance().newTransformer()
 					.transform(new DOMSource(input), new StreamResult(new File("/tmp/output.xml")));
