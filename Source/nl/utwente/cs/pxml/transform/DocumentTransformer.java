@@ -225,8 +225,8 @@ public class DocumentTransformer {
 
 	protected void insertEventsAttributes(Document origin, Element pNode, int numVariables) {
 		// determine number of vars to use (max log_2(total vars), min 1)
-		int numUsed = 1; // TODO: randomize between 1 and log_2(total vars)
-
+		int numUsed = 1 + (int) (Math.random() * Math.log(numVariables) / Math.log(2));
+		
 		// create list of available variables
 		List<Integer> toUse = new ArrayList<Integer>(numVariables);
 		for (int i = 0; i < numVariables; i++) {
