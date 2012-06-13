@@ -8,10 +8,6 @@ import java.util.TreeMap;
 
 import org.basex.query.QueryModule;
 import org.basex.query.item.ANode;
-import org.basex.query.item.QNm;
-
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
-
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
 /**
