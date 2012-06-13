@@ -1,0 +1,26 @@
+options {
+	
+}
+
+PARSER_BEGIN(XPathTransformer)
+
+// place the transformer in a meaningful package
+package nl.utwente.cs.pxml.transform.xpath;
+
+/**
+ * XPathTransformer - JavaCC-generated parser to transform an XPath-expression on an a regular context to an 
+ * XQuery-expression of that same document with a probabilistic overlay.
+ */
+class XPathTransformer {
+	
+	public static void main(String... args) {
+		// TODO: implement me!
+	}
+	
+}
+
+PARSER_END(XPathTransformer)
+
+TOKEN : 
+{ 
+}
