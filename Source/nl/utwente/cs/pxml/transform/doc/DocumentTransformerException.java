@@ -1,4 +1,4 @@
-package nl.utwente.cs.pxml.transform;
+package nl.utwente.cs.pxml.transform.doc;
 
 public class DocumentTransformerException extends Exception {
 
