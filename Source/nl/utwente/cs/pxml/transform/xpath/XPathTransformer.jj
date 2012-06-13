@@ -21,6 +21,40 @@ class XPathTransformer {
 
 PARSER_END(XPathTransformer)
 
-TOKEN : 
-{ 
+TOKEN :
+
+// XPath step character
+{ < STEP : "/" >
+
+// XPath axis names (copied from http://www.w3.org/TR/xpath/ section 2.2)
+| < AXIS : 
+	  "ancestor"
+	| "ancestor-or-self"
+	| "attribute"
+	| "child"
+	| "descendant"
+	| "descendant-or-self"
+	| "following"
+	| "following-sibling"
+	| "namespace"
+	| "parent"
+	| "preceding"
+	| "preceding-sibling"
+	| "self" >
+
+// separator between axis name and node test
+| < SEPARATOR : "::" >
+
+// node names, required to start with a letter or _, followed by a word character (A-z, 0-9 or _)
+| < NODENAME : (["A"-"z", "_"])(["0"-"9", "A"-"z", "_"])* >
+
+// XPath expression for 'any'
+| < NODEANY : "*" >
+
+// XPath node types (copied from http://www.w3.org/TR/xpath/ section 3.7)
+| < NODETYPE : 
+	  "comment()"	
+	| "text()"	
+	| "processing-instruction()"	
+	| "node()" >
 }
