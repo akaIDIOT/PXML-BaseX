@@ -21,10 +21,13 @@ class XPathTransformer {
 
 PARSER_END(XPathTransformer)
 
-TOKEN :
+TOKEN : {
+
+// string constant (document name)
+  < STRING : ("\""(["A"-"z", ".", "0"-"9"])*"\"") >
 
 // XPath step character
-{ < STEP : "/" >
+| < STEP : "/" >
 
 // XPath axis names (copied from http://www.w3.org/TR/xpath/ section 2.2)
 | < AXIS : 
@@ -57,4 +60,45 @@ TOKEN :
 	| "text()"	
 	| "processing-instruction()"	
 	| "node()" >
+}
+
+/**
+ * Matches a document reference of the form
+ *     doc("docName.xml")
+ * and returns the string literal (including the quotes).
+ */
+String document() :
+{
+	// use local variable docName to store document name token
+	Token docName;
+}
+{
+	"doc(" docName = < STRING > ")"
+	{
+		// return the string constant (including quotes)
+		return docName.image;
+	}
+}
+
+/**
+ * Matches a single XPath axis step of the form
+ *     /axis::nodeTest
+ * and returns it as it was matched.
+ */
+String axisStep() :
+{
+	// use local variable axis to store the axis
+	Token axis = null;
+	// use local variable nodeTest to store the nodeTest on the axis
+	Token nodeTest = null;
+}
+{
+	< STEP >
+	axis = < AXIS >
+	< SEPARATOR >
+	( nodeTest = < NODENAME > | < NODEANY > | < NODETYPE > )
+	{
+		// return the input, an XPath axis step
+		return axis.image + "::" + nodeTest.image;
+	}
 }
