@@ -1,5 +1,6 @@
 options {
-	
+	// force creation of instance-style parser
+	STATIC = false;
 }
 
 PARSER_BEGIN(XPathTransformer)
@@ -7,14 +8,42 @@ PARSER_BEGIN(XPathTransformer)
 // place the transformer in a meaningful package
 package nl.utwente.cs.pxml.transform.xpath;
 
+import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * XPathTransformer - JavaCC-generated parser to transform an XPath-expression on an a regular context to an 
  * XQuery-expression of that same document with a probabilistic overlay.
  */
 class XPathTransformer {
 	
+	// store the currently supported axes for ease of use
+	public static final List<String> SUPPORTED_AXES = Arrays.asList("child", "descendant");
+
 	public static void main(String... args) {
-		// TODO: implement me!
+		// do a sanity check (just a single XPath-expression supported for now)
+		if (args.length != 1) {
+			System.err.println("expected exactly 1 argument, terminating");
+			System.exit(1);
+		}
+
+		// create a new transformer, reading from the only argument
+		XPathTransformer transformer = new XPathTransformer(new StringReader(args[0]));
+		// parse the input string, the result is a string containing the resulting XQuery-expression
+		String code = "";
+		try {
+			 code = transformer.parseInput();
+		} catch (ParseException e) {
+			System.err.println("parser error at column " + e.currentToken.beginColumn + ", terminating");
+			System.exit(1);
+		}
+
+		// print header
+		System.out.println("(: transforming XPath expression " + args[0] + " :)\n");
+
+		// print the actual generated code
+		System.out.println(code);
 	}
 	
 }
@@ -22,9 +51,8 @@ class XPathTransformer {
 PARSER_END(XPathTransformer)
 
 TOKEN : {
-
 // string constant (document name)
-  < STRING : ("\""(["A"-"z", ".", "0"-"9"])*"\"") >
+  < STRING : ("\""(["a"-"z","A"-"Z",".","0"-"9"])*"\"") >
 
 // XPath step character
 | < STEP : "/" >
@@ -62,6 +90,34 @@ TOKEN : {
 	| "node()" >
 }
 
+String parseInput() :
+{
+	String docName;
+	String axisStep = "";
+	StringBuilder expression = new StringBuilder();
+}
+{
+	// start with a document name match
+	docName = document()
+	{
+		// TODO: produce initialization XQuery code
+	}
+
+	// proceed with one or more axis steps
+	(
+		axisStep = axisStep()
+		{
+			// TODO: produce axis step XQuery code
+		}
+	)+
+	{
+		// TODO: produce result production XQuery code
+
+		// return final
+		return expression.toString();
+	}
+}
+
 /**
  * Matches a document reference of the form
  *     doc("docName.xml")
@@ -87,7 +143,7 @@ String document() :
  */
 String axisStep() :
 {
-	// use local variable axis to store the axis
+	// use local variable axis to store the axis (initialized at null so javac won't complain about initialization)
 	Token axis = null;
 	// use local variable nodeTest to store the nodeTest on the axis
 	Token nodeTest = null;
