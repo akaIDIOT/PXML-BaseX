@@ -133,7 +133,7 @@ String parseInput() :
 		// start of XQuery content (collect answers in result node)
 		expression.add("<p:result>{");
 		expression.add("");
-		expression.add("let $context0     := doc(" + docName + ")"); // quotes are included in the document name
+		expression.add("let $context0 := doc(" + docName + ")"); // quotes are included in the document name
 		expression.add("let $descriptors0 := \"\"");
 	}
 
@@ -150,7 +150,7 @@ String parseInput() :
 			// increment step counter
 			this.currentStep++;
 			expression.add("");
-			expression.add("(: step " + this.currentStep + ": " + axisStep + " :)");
+			expression.add("(: take step " + this.currentStep + ": " + axisStep + " :)");
 
 			// create 'next' context
 			expression.add(String.format("for $context%d in $context%d/%s",
@@ -166,12 +166,21 @@ String parseInput() :
 		}
 	)+
 	{
+		// prepare result variables
 		expression.add("");
+		expression.add("(: all steps taken, calculate probabilities for all resulting nodes :)");
+		expression.add("let $answer := $context" + this.currentStep);
+		expression.add("let $descriptors := $descriptors" + this.currentStep);
+		expression.add("let $probability := pxml:probability($context0/p:variables, $descriptors)");
 
-		// TODO: produce result production XQuery code
+		// output result nodes
+		expression.add("");
+		expression.add("return <p:answer p:descriptors=\"{$descriptors}\" p:probability=\"{$probability}\">{$answer}</answer>");
 
+		// end of XQuery expression, close scope and result node
 		expression.add("");
 		expression.add("}</p:result>");
+
 		// return final expression as a single string
 		return CollectionUtils.join(expression, "\n");
 	}
