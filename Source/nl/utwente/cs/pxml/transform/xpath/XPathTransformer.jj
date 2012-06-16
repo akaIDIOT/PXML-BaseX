@@ -46,6 +46,23 @@ class XPathTransformer {
 		System.out.println(code);
 	}
 	
+	public class AxisStep {
+		
+		public final String axis;
+		public final String nodeTest;
+		
+		public AxisStep(String axis, String noteTest) {
+			this.axis = axis;
+			this.nodeTest = nodeTest;
+		}
+		
+		@Override
+		public String toString() {
+			return this.axis + "::" + this.nodeTest;
+		}
+	
+	}
+	
 }
 
 PARSER_END(XPathTransformer)
@@ -93,7 +110,7 @@ TOKEN : {
 String parseInput() :
 {
 	String docName;
-	String axisStep = "";
+	AxisStep axisStep;
 	StringBuilder expression = new StringBuilder();
 }
 {
@@ -141,7 +158,7 @@ String document() :
  *     /axis::nodeTest
  * and returns it as it was matched.
  */
-String axisStep() :
+AxisStep axisStep() :
 {
 	// use local variable axis to store the axis (initialized at null so javac won't complain about initialization)
 	Token axis = null;
@@ -155,6 +172,6 @@ String axisStep() :
 	( nodeTest = < NODENAME > | < NODEANY > | < NODETYPE > )
 	{
 		// return the input, an XPath axis step
-		return axis.image + "::" + nodeTest.image;
+		return new AxisStep(axis.image, nodeTest.image);
 	}
 }
