@@ -26,6 +26,7 @@ import javax.xml.xpath.XPathException;
 import javax.xml.xpath.XPathFactory;
 
 import nl.utwente.cs.pxml.ProbabilityNodeType;
+import nl.utwente.cs.pxml.util.CollectionUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -163,7 +164,7 @@ public class DocumentTransformer {
 			}
 
 			// add the used random variables to the document
-			Node varList = doc.createElementNS(NS_URI, NS_PREFIX + ":vars");
+			Node varList = doc.createElementNS(NS_URI, NS_PREFIX + ":variables");
 			for (int i = 0; i < numVariables; i++) {
 				Element var = doc.createElementNS(NS_URI, NS_PREFIX + ":var-" + i);
 				double probability = this.random.nextDouble();
@@ -322,19 +323,28 @@ public class DocumentTransformer {
 	 */
 	protected void insertEventsAttributes(Document origin, Element pNode, int numVariables) {
 		// determine number of vars to use (max log_2(total vars), min 1)
-		int numUsed = numVariables == 1 ? 1 : 1 + this.random.nextInt((int) Math.round((Math.log(numVariables) / Math.log(2))));
+		int numUsed = numVariables == 1 ? 1 : 1 + this.random.nextInt((int) Math.round((Math.log(numVariables) / Math
+				.log(2))));
 
 		// create list of available variables
 		List<Integer> toUse = new ArrayList<Integer>(numVariables);
 		for (int i = 0; i < numVariables; i++) {
 			toUse.add(i);
 		}
+
+		List<String> descriptors = new ArrayList<String>(numUsed);
 		// randomize the list
 		Collections.shuffle(toUse);
 		for (int i = 0; i < numUsed; i++) {
+			String value = this.random.nextBoolean() ? "1" : "0";
 			// add 'requirement' for a variable to be either true or false (using the numUsed first items in toUse)
-			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + toUse.get(i), this.random.nextBoolean() ? "1" : "0");
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + toUse.get(i), value);
+			// save a string representation of the descriptor
+			descriptors.add("val-" + toUse.get(i) + "=" + value);
 		}
+
+		// save the entire description list to a single attribute for ease the XQuery expression later
+		pNode.setAttributeNS(NS_URI, NS_PREFIX + ":descriptors", CollectionUtils.join(descriptors, " "));
 	}
 
 	/**
