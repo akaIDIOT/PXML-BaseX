@@ -24,6 +24,9 @@ class XPathTransformer {
 	// store the currently supported axes for ease of use
 	public static final List<String> SUPPORTED_AXES = Arrays.asList("child", "descendant");
 
+	// helper variable to work around XQuery's immutable variables
+	protected int currentStep = 0;
+
 	public static void main(String... args) {
 		// do a sanity check (just a single XPath-expression supported for now)
 		if (args.length != 1) {
@@ -127,8 +130,11 @@ String parseInput() :
 
 		// declare some variables to be used
 		expression.add("");
-		expression.add("let $context     := doc(" + docName + ");"); // quotes are included in the document name
-		expression.add("let $descriptors := \"\";");
+		// start of XQuery content (collect answers in result node)
+		expression.add("<p:result>{");
+		expression.add("");
+		expression.add("let $context0     := doc(" + docName + ")"); // quotes are included in the document name
+		expression.add("let $descriptors0 := \"\"");
 	}
 
 	// proceed with one or more axis steps
@@ -141,13 +147,32 @@ String parseInput() :
 				throw new RuntimeException("axis " + axisStep.axis + " is not supported");
 			}
 
-			// TODO: produce axis step XQuery code
+			// increment step counter
+			this.currentStep++;
+			expression.add("");
+			expression.add("(: step " + this.currentStep + ": " + axisStep + " :)");
+
+			// create 'next' context
+			expression.add(String.format("for $context%d in $context%d/%s",
+					this.currentStep, this.currentStep - 1, axisStep));
+
+			// collect variable descriptors and combine
+			expression.add(String.format("    let $descriptors%d := pxml:combine($descriptors%d, $context%d/ancestor-or-self::*/@p:wsd/string())",
+					this.currentStep, this.currentStep - 1, this.currentStep));
+
+			// prune inconsistent possibilities
+			expression.add(String.format("    where pxml:consistent($descriptors%d)", this.currentStep));
+			expression.add("return");
 		}
 	)+
 	{
+		expression.add("");
+
 		// TODO: produce result production XQuery code
 
-		// return final
+		expression.add("");
+		expression.add("}</p:result>");
+		// return final expression as a single string
 		return CollectionUtils.join(expression, "\n");
 	}
 }
