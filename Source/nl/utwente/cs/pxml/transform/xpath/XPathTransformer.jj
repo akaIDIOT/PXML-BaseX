@@ -40,21 +40,29 @@ class XPathTransformer {
 		String code = "";
 		try {
 			 code = transformer.parseInput();
+
+			// print header
+			System.out.println("(: transforming XPath expression " + args[0] + " :)\n");
+
+			// print the actual generated code
+			System.out.println(code);
 		} catch (ParseException e) {
-			System.err.println("parser error at column " + e.currentToken.beginColumn + ", terminating");
+			System.err.println(e.getMessage());
+			System.exit(1);
+		} catch (TokenMgrError e) {
+			System.err.println(e.getMessage());
 			System.exit(1);
 		}
-
-		// print header
-		System.out.println("(: transforming XPath expression " + args[0] + " :)\n");
-
-		// print the actual generated code
-		System.out.println(code);
 	}
-	
+
+	/**
+	 * Simple record class combining an axis and a node test.
+	 */
 	public class AxisStep {
 		
+		// the axis this step takes
 		public final String axis;
+		// the node test along the axis
 		public final String nodeTest;
 		
 		public AxisStep(String axis, String nodeTest) {
@@ -62,6 +70,10 @@ class XPathTransformer {
 			this.nodeTest = nodeTest;
 		}
 		
+		/**
+		 * Prints a verbose axis step in the form
+		 *     axis::nodeTest
+		 */
 		@Override
 		public String toString() {
 			return this.axis + "::" + this.nodeTest;
