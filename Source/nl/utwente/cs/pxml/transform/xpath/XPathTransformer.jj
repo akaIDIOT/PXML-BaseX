@@ -9,8 +9,11 @@ PARSER_BEGIN(XPathTransformer)
 package nl.utwente.cs.pxml.transform.xpath;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import nl.utwente.cs.pxml.util.CollectionUtils;
 
 /**
  * XPathTransformer - JavaCC-generated parser to transform an XPath-expression on an a regular context to an 
@@ -51,7 +54,7 @@ class XPathTransformer {
 		public final String axis;
 		public final String nodeTest;
 		
-		public AxisStep(String axis, String noteTest) {
+		public AxisStep(String axis, String nodeTest) {
 			this.axis = axis;
 			this.nodeTest = nodeTest;
 		}
@@ -111,19 +114,33 @@ String parseInput() :
 {
 	String docName;
 	AxisStep axisStep;
-	StringBuilder expression = new StringBuilder();
+	List<String> expression = new ArrayList<String>();
 }
 {
 	// start with a document name match
 	docName = document()
 	{
-		// TODO: produce initialization XQuery code
+		// declare a namespace for the answers
+		expression.add("declare namespace p = \"http://www.cs.utwente.nl/~keulen/pxml\";");
+		// import PXML query module
+		expression.add("import module namespace pxml = \"java:nl.utwente.cs.pxml.PXML\";");
+
+		// declare some variables to be used
+		expression.add("");
+		expression.add("let $context     := doc(" + docName + ");"); // quotes are included in the document name
+		expression.add("let $descriptors := \"\";");
 	}
 
 	// proceed with one or more axis steps
 	(
 		axisStep = axisStep()
 		{
+			// check if the axis is supported
+			if (!SUPPORTED_AXES.contains(axisStep.axis)) {
+				// TODO: throw more meaningful exception
+				throw new RuntimeException("axis " + axisStep.axis + " is not supported");
+			}
+
 			// TODO: produce axis step XQuery code
 		}
 	)+
@@ -131,7 +148,7 @@ String parseInput() :
 		// TODO: produce result production XQuery code
 
 		// return final
-		return expression.toString();
+		return CollectionUtils.join(expression, "\n");
 	}
 }
 
