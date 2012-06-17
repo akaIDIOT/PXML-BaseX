@@ -30,13 +30,13 @@ public class PXML extends QueryModule {
 	/**
 	 * Mapping used to cache probabilities for conditions encountered earlier.
 	 */
-	protected Map<String, Double> probabilityCache;
+	protected Map<Condition, Double> probabilityCache;
 
 	/**
 	 * Creates a new PXML instance, with a newly created probability cache.
 	 */
 	public PXML() {
-		this.probabilityCache = new TreeMap<String, Double>();
+		this.probabilityCache = new TreeMap<Condition, Double>();
 	}
 
 	/**
@@ -81,8 +81,8 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
-	public boolean consistent(String descriptor) {
-		ConditionGenerator generator = new ConditionGenerator(descriptor);
+	public boolean consistent(Str descriptor) {
+		ConditionGenerator generator = new ConditionGenerator(descriptor.toJava());
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
 
 		for (Condition condition : generator) {
@@ -112,9 +112,9 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
-	public boolean mutuallyExclusive(String a, String b) {
-		ConditionGenerator condA = new ConditionGenerator(a);
-		ConditionGenerator condB = new ConditionGenerator(b);
+	public boolean mutuallyExclusive(Str a, Str b) {
+		ConditionGenerator condA = new ConditionGenerator(a.toJava());
+		ConditionGenerator condB = new ConditionGenerator(b.toJava());
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
 
 		// put all conditions a into the map ...
@@ -148,15 +148,16 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@ContextDependent
-	public double probability(ANode wsdList, String... conditions) { // TODO: make String... a BaseX Value?
+	public double probability(ANode wsdList, Str conditions) { // TODO: make String... a BaseX Value?
 		double probability = 1.0;
 		// find probabilities for all conditions, multiply them
-		for (String condition : conditions) {
+		for (Condition condition : new ConditionGenerator(conditions.toJava())) {
+			String strCondition = condition.toString();
 			// use Double to allow null when key is not present (TODO: test this)
 			Double value = this.probabilityCache.get(condition);
 			if (value == null) {
 				// find it in the wsd-list ...
-				value = this.findProbability(wsdList, condition);
+				value = this.findProbability(wsdList, condition.toString());
 				// ... and cache it for future use
 				this.probabilityCache.put(condition, value);
 			}
