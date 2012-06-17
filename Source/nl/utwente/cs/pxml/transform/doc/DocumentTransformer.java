@@ -338,9 +338,9 @@ public class DocumentTransformer {
 		for (int i = 0; i < numUsed; i++) {
 			String value = this.random.nextBoolean() ? "1" : "0";
 			// add 'requirement' for a variable to be either true or false (using the numUsed first items in toUse)
-			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":val-" + toUse.get(i), value);
+			pNode.setAttributeNS(NS_URI, NS_PREFIX + ":var-" + toUse.get(i), value);
 			// save a string representation of the descriptor
-			descriptors.add("val-" + toUse.get(i) + "=" + value);
+			descriptors.add("var-" + toUse.get(i) + "=" + value);
 		}
 
 		// save the entire description list to a single attribute for ease the XQuery expression later

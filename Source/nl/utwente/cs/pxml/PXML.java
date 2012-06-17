@@ -23,11 +23,6 @@ import org.basex.query.item.Value;
 public class PXML extends QueryModule {
 
 	/**
-	 * The namespace used for elements dealing with probability in the a document.
-	 */
-	public static final String NAMESPACE = "http://www.utwente.nl/~keulen/pxml/";
-
-	/**
 	 * Mapping used to cache probabilities for conditions encountered earlier.
 	 */
 	protected Map<Condition, Double> probabilityCache;
@@ -51,7 +46,7 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
-	public String combine(Str existing, Value additional) {
+	public String combine(Str existing) { // , Value additional) {
 		try {
 			// create a condition 'container'
 			Set<String> result = new HashSet<String>();
@@ -62,16 +57,16 @@ public class PXML extends QueryModule {
 			}
 
 			// read all the additional conditions from the sequence.
-			for (Item item : additional) {
-				// a single item in the sequence might contain multiple conditions
-				for (Condition condition : new ConditionGenerator((String) item.toJava())) {
-					result.add(condition.toString());
-				}
-			}
+			// for (Item item : additional) {
+			// // a single item in the sequence might contain multiple conditions
+			// for (Condition condition : new ConditionGenerator((String) item.toJava())) {
+			// result.add(condition.toString());
+			// }
+			// }
 
 			// join the resulting set on a space
 			return CollectionUtils.join(result, " ");
-		} catch (QueryException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return "";
 		}
@@ -159,8 +154,7 @@ public class PXML extends QueryModule {
 		double probability = 1.0;
 		// find probabilities for all conditions, multiply them
 		for (Condition condition : new ConditionGenerator(conditions.toJava())) {
-			String strCondition = condition.toString();
-			// use Double to allow null when key is not present (TODO: test this)
+			// use Double to allow null when key is not present
 			Double value = this.probabilityCache.get(condition);
 			if (value == null) {
 				// find it in the wsd-list ...
