@@ -43,9 +43,11 @@ public class PXML extends QueryModule {
 	 * Combines all conditions into a single string keeping only the unique
 	 * conditions. The result need not be consistent.
 	 * 
-	 * @param conditions
-	 *            The conditions to be combined.
-	 * @return A single string containing all conditions in the parameters.
+	 * @param existing
+	 *            A string containing conditions.
+	 * @param additional
+	 *            A BaseX Value containing additional conditions.
+	 * @return A single string containing conditions without duplicats.
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
@@ -53,13 +55,11 @@ public class PXML extends QueryModule {
 		try {
 			// create a condition 'container'
 			Set<String> result = new HashSet<String>();
-			// read the existing conditions
-			for (Condition condition : new ConditionGenerator(existing.toJava())) {
-				result.add(condition.toString());
-			}
-			// read additional conditions
-			for (Item condition : additional.iter()) {
-				result.add((String) condition.toJava());
+
+			for (Item item : additional) {
+				for (Condition condition : new ConditionGenerator((String) item.toJava())) {
+					result.add(condition.toString());
+				}
 			}
 
 			// join the resulting set on a space
