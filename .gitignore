@@ -3,5 +3,6 @@
 bin/
 lib/
 res/
+run/
 Source/nl/utwente/cs/pxml/transform/xpath/*.java
 

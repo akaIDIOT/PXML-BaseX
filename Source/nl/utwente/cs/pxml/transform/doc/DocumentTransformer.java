@@ -348,19 +348,24 @@ public class DocumentTransformer {
 	}
 
 	/**
-	 * Utility method to test DocumentTransformer. Reads a document from /tmp/input.xml and writes the document with a
-	 * probabilistic overlay to /tmp/output.xml).
+	 * Utility method to test DocumentTransformer. Reads a document from $1 and writes the document with a probabilistic
+	 * overlay to $2.
 	 * 
 	 * @param args
 	 *            Unused.
 	 */
 	public static void main(String... args) {
 		try {
-			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-					.parse(new File("/tmp/input.xml"));
+			// check number of arguments
+			if (args.length != 2) {
+				System.err.println("expected exactly 2 arguments");
+				System.exit(1);
+			}
+
+			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new File(args[0]));
 			new DocumentTransformer().transform(input);
 			TransformerFactory.newInstance().newTransformer()
-					.transform(new DOMSource(input), new StreamResult(new File("/tmp/output.xml")));
+					.transform(new DOMSource(input), new StreamResult(new File(args[1])));
 		} catch (SAXException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
