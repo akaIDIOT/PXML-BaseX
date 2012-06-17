@@ -5,7 +5,7 @@ package nl.utwente.cs.pxml;
  * 
  * @author Mattijs Ugen
  */
-public class Condition {
+public class Condition implements Comparable<Condition> {
 
 	public final String name;
 	public final int value;
@@ -65,6 +65,12 @@ public class Condition {
 	@Override
 	public String toString() {
 		return this.name + "=" + this.value;
+	}
+
+	@Override
+	public int compareTo(Condition other) {
+		int value = this.name.compareTo(other.name);
+		return value != 0 ? value : other.value - this.value;
 	}
 
 }
