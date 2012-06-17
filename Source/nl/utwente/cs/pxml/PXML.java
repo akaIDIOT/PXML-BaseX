@@ -47,7 +47,7 @@ public class PXML extends QueryModule {
 	 *            A string containing conditions.
 	 * @param additional
 	 *            A BaseX Value containing additional conditions.
-	 * @return A single string containing conditions without duplicats.
+	 * @return A single string containing conditions without duplicates.
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
@@ -56,7 +56,14 @@ public class PXML extends QueryModule {
 			// create a condition 'container'
 			Set<String> result = new HashSet<String>();
 
+			// store the existing conditions
+			for (Condition condition : new ConditionGenerator(existing.toJava())) {
+				result.add(condition.toString());
+			}
+
+			// read all the additional conditions from the sequence.
 			for (Item item : additional) {
+				// a single item in the sequence might contain multiple conditions
 				for (Condition condition : new ConditionGenerator((String) item.toJava())) {
 					result.add(condition.toString());
 				}
