@@ -39,7 +39,7 @@ public class DocumentTransformer {
 	// the prefix used for the probability namespace
 	public static final String NS_PREFIX = "p";
 	// the uri used for the probability namespace
-	public static final String NS_URI = "http://www.utwente.nl/~keulen/pxml/";
+	public static final String NS_URI = "http://www.cs.utwente.nl/~keulen/pxml";
 
 	// how often probability nodes will occur (0.0: never, 1.0: at every chance, taken from XMLToPXMLTransformer.java)
 	protected float pNodesOccurrence = 0.2f;

@@ -183,7 +183,7 @@ String parseInput() :
 		expression.add("(: all steps taken, calculate probabilities for all resulting nodes :)");
 		expression.add("let $answer := $context" + this.currentStep);
 		expression.add("let $descriptors := $descriptors" + this.currentStep);
-		expression.add("let $probability := pxml:probability($context0/p:variables, $descriptors)");
+		expression.add("let $probability := pxml:probability($context0//p:variables, $descriptors)");
 
 		// output result nodes
 		expression.add("");
