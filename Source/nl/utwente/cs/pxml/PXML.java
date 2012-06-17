@@ -6,9 +6,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import nl.utwente.cs.pxml.util.CollectionUtils;
+
+import org.basex.query.QueryException;
 import org.basex.query.QueryModule;
 import org.basex.query.item.ANode;
-import nl.utwente.cs.pxml.util.CollectionUtils;
+import org.basex.query.item.Item;
+import org.basex.query.item.Str;
+import org.basex.query.item.Value;
 
 /**
  * Importable query module containing functions for use with probabilistic XML.
@@ -44,16 +49,25 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
-	public String combine(String... conditions) { // TODO: make String... a BaseX Value?
-		// create a condition 'container'
-		Set<String> result = new HashSet<String>(conditions.length);
-		for (String condition : conditions) {
-			// rely on Set to enforce uniqueness
-			result.add(condition);
-		}
+	public String combine(Str existing, Value additional) {
+		try {
+			// create a condition 'container'
+			Set<String> result = new HashSet<String>();
+			// read the existing conditions
+			for (Condition condition : new ConditionGenerator(existing.toJava())) {
+				result.add(condition.toString());
+			}
+			// read additional conditions
+			for (Item condition : additional.iter()) {
+				result.add((String) condition.toJava());
+			}
 
-		// join the resulting set on the separator
-		return CollectionUtils.join(result, " ");
+			// join the resulting set on a space
+			return CollectionUtils.join(result, " ");
+		} catch (QueryException e) {
+			e.printStackTrace();
+			return "";
+		}
 	}
 
 	/**
