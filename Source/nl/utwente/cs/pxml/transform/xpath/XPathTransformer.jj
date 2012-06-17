@@ -87,7 +87,7 @@ PARSER_END(XPathTransformer)
 
 TOKEN : {
 // string constant (document name)
-  < STRING : ("\""(["a"-"z","A"-"Z",".","0"-"9"])*"\"") >
+  < STRING : ("\""(["A"-"z", "0"-"9", ".", "_", "-"])*"\"") >
 
 // XPath step character
 | < STEP : "/" >
@@ -187,7 +187,7 @@ String parseInput() :
 
 		// output result nodes
 		expression.add("");
-		expression.add("return <p:answer p:descriptors=\"{$descriptors}\" p:probability=\"{$probability}\">{$answer}</answer>");
+		expression.add("return <p:answer p:descriptors=\"{$descriptors}\" p:probability=\"{$probability}\">{$answer}</p:answer>");
 
 		// end of XQuery expression, close scope and result node
 		expression.add("");
