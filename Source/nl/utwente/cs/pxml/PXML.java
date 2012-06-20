@@ -8,12 +8,11 @@ import java.util.TreeMap;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
-import org.basex.query.QueryException;
 import org.basex.query.QueryModule;
-import org.basex.query.item.ANode;
-import org.basex.query.item.Item;
-import org.basex.query.item.Str;
-import org.basex.query.item.Value;
+import org.basex.query.value.Value;
+import org.basex.query.value.item.Item;
+import org.basex.query.value.item.Str;
+import org.basex.query.value.node.ANode;
 
 /**
  * Importable query module containing functions for use with probabilistic XML.
@@ -46,7 +45,7 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@Deterministic
-	public String combine(Str existing) { // , Value additional) {
+	public String combine(Str existing, Value additional) {
 		try {
 			// create a condition 'container'
 			Set<String> result = new HashSet<String>();
@@ -57,12 +56,12 @@ public class PXML extends QueryModule {
 			}
 
 			// read all the additional conditions from the sequence.
-			// for (Item item : additional) {
-			// // a single item in the sequence might contain multiple conditions
-			// for (Condition condition : new ConditionGenerator((String) item.toJava())) {
-			// result.add(condition.toString());
-			// }
-			// }
+			for (Item item : additional) {
+				// a single item in the sequence might contain multiple conditions
+				for (Condition condition : new ConditionGenerator((String) item.toJava())) {
+					result.add(condition.toString());
+				}
+			}
 
 			// join the resulting set on a space
 			return CollectionUtils.join(result, " ");

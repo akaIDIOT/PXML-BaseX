@@ -169,7 +169,7 @@ String parseInput() :
 					this.currentStep, this.currentStep - 1, axisStep));
 
 			// collect variable descriptors and combine
-			expression.add(String.format("    let $descriptors%d := pxml:combine(string-join(($descriptors%d, string-join($context%d/ancestor-or-self::*/@p:descriptors/string(), ' ')), ' '))",
+			expression.add(String.format("    let $descriptors%d := pxml:combine($descriptors%d, $context%d/ancestor-or-self::*/@p:descriptors/string())",
 					this.currentStep, this.currentStep - 1, this.currentStep));
 
 			// prune inconsistent possibilities
