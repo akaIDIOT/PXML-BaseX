@@ -34,49 +34,45 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+
 public class DocumentTransformer {
 
 	// the prefix used for the probability namespace
+	@Parameter(names = "--ns-prefix", description = "namespace prefix to use")
 	public static final String NS_PREFIX = "p";
 	// the uri used for the probability namespace
+	@Parameter(names = "--ns-uri", description = "namespace uri to use")
 	public static final String NS_URI = "http://www.cs.utwente.nl/~keulen/pxml";
 
 	// how often probability nodes will occur (0.0: never, 1.0: at every chance, taken from XMLToPXMLTransformer.java)
+	@Parameter(names = "--pnodes", description = "probability of pnode insertion")
 	protected float pNodesOccurrence = 0.2f;
 	// array of probability node types (more occurrences will make the type more likely to be picked, taken from
 	// XMLToPXMLTransformer.java)
+	// TODO: encode this into an @Parameter
 	protected ProbabilityNodeType[] pNodeDistribution = {
 			MUTEX, MUTEX, MUTEX, MUTEX, INDEPENDENT, INDEPENDENT, INDEPENDENT, INDEPENDENT, EVENTS
 	};
 	// the number of random variables relative to the expected number of EVENT-type pNodes
+	@Parameter(names = "--num-vars", description = "fraction of random variables relative to the number of EVENT-type nodes")
 	protected float pVariablesRatio = 0.1f;
 
 	// TODO: incorporate _ratioExpSubsets, and _maxExpSubsetsPwr from XMLToPXMLTransformer.java
 
 	protected Random random;
 
+	// file names list (collected in a list due to JCommander)
+	@Parameter(description = "<infile> <outfile>", arity = 2)
+	protected List<String> fileNames = new ArrayList<String>();
+
 	/**
 	 * Creates a new DocumentTransformer using the default distribution ratios specified.
 	 */
 	public DocumentTransformer() {
 		this.random = new Random();
-	}
-
-	/**
-	 * Creates a new DocumentTransformer using the provided distribution ratios.
-	 * 
-	 * @param pNodesOccurrence
-	 *            Ratio of pNodes compared to the total number of nodes in a document.
-	 * @param pNodeDistribution
-	 *            Relative occurrence of pNode types, encoded as an array of types (values can occur multiple times).
-	 * @param pVariablesRatio
-	 *            Ratio of variables to use compared to the number of expected EVENT-type pNodes.
-	 */
-	public DocumentTransformer(float pNodesOccurrence, ProbabilityNodeType[] pNodeDistribution, float pVariablesRatio) {
-		this();
-		this.pNodesOccurrence = pNodesOccurrence;
-		this.pNodeDistribution = pNodeDistribution;
-		this.pVariablesRatio = pVariablesRatio;
 	}
 
 	/**
@@ -355,17 +351,23 @@ public class DocumentTransformer {
 	 *            Unused.
 	 */
 	public static void main(String... args) {
-		try {
-			// check number of arguments
-			if (args.length != 2) {
-				System.err.println("expected exactly 2 arguments");
-				System.exit(1);
-			}
+		// create transformer instance
+		DocumentTransformer transformer = new DocumentTransformer();
+		JCommander arguments = new JCommander(transformer);
 
-			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new File(args[0]));
+		try {
+			// have JCommander parse and assign arguments
+			arguments.parse(args);
+			// create input from first filename argument
+			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+					.parse(new File(transformer.fileNames.get(0)));
+			// do the actual transforming
 			new DocumentTransformer().transform(input);
+			// write the output to the second filename argument
 			TransformerFactory.newInstance().newTransformer()
-					.transform(new DOMSource(input), new StreamResult(new File(args[1])));
+					.transform(new DOMSource(input), new StreamResult(new File(transformer.fileNames.get(1))));
+		} catch (ParameterException e) {
+			arguments.usage();
 		} catch (SAXException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
