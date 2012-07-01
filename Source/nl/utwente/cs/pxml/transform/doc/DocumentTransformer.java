@@ -60,6 +60,10 @@ public class DocumentTransformer {
 	@Parameter(names = "--num-vars", description = "fraction of random variables relative to the number of EVENT-type nodes")
 	protected float pVariablesRatio = 0.1f;
 
+	// how to handle text nodes in the case of mux, ind and exp nodes
+	@Parameter(names = "--text-nodes", description = "handle text nodes as 'wrap' ('ignore' to be added later)")
+	protected String textNodeStrategy = "";
+
 	// TODO: incorporate _ratioExpSubsets, and _maxExpSubsetsPwr from XMLToPXMLTransformer.java
 
 	protected Random random;
@@ -85,6 +89,7 @@ public class DocumentTransformer {
 	 *             When an XML or XPath error occurs while processing.
 	 */
 	public void transform(Document doc) throws DocumentTransformerException {
+		System.err.println("text node strategy is " + this.textNodeStrategy);
 		try {
 			// add the pxml namespace to the document
 			doc.getDocumentElement().setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + NS_PREFIX, NS_URI);
@@ -94,7 +99,7 @@ public class DocumentTransformer {
 			// (...) and make sure it knows about the namespaces used in the document
 			xpath.setNamespaceContext(new NamespaceResolver(doc));
 
-			// find all the nodes in the document element (make sure to not wrap the root (TODO: does this work?))
+			// find all the nodes in the document element
 			NodeList nodes = (NodeList) xpath.evaluate("//*", doc.getDocumentElement(), XPathConstants.NODESET);
 			int length = nodes.getLength();
 			System.out.println("  document has " + length + " cadidate nodes");
@@ -126,8 +131,11 @@ public class DocumentTransformer {
 					+ INDEPENDENT.nodeName + ">");
 			for (int i = 0, max = independents.getLength(); i < max; i++) {
 				Element pNode = (Element) independents.item(i);
-				this.insertIndependantAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
-																									// actual elements?
+				this.insertIndependantAttributes(doc, pNode, pNode.getChildNodes().getLength());
+				// wrap the text nodes if requested
+				if ("wrap".equalsIgnoreCase(this.textNodeStrategy)) {
+					this.wrapTextNodes(doc, pNode.getChildNodes());
+				}
 			}
 
 			NodeList mutexes = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + MUTEX.nodeName,
@@ -136,8 +144,11 @@ public class DocumentTransformer {
 					+ MUTEX.nodeName + ">");
 			for (int i = 0, max = mutexes.getLength(); i < max; i++) {
 				Element pNode = (Element) mutexes.item(i);
-				this.insertMutexAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
-																							// actual elements?
+				this.insertMutexAttributes(doc, pNode, pNode.getChildNodes().getLength());
+				// wrap the text nodes if requested
+				if ("wrap".equalsIgnoreCase(this.textNodeStrategy)) {
+					this.wrapTextNodes(doc, pNode.getChildNodes());
+				}
 			}
 
 			NodeList explicits = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + EXPLICIT.nodeName,
@@ -146,8 +157,11 @@ public class DocumentTransformer {
 					+ EXPLICIT.nodeName + ">");
 			for (int i = 0, max = explicits.getLength(); i < max; i++) {
 				Element pNode = (Element) explicits.item(i);
-				this.insertExplicitAttributes(doc, pNode, pNode.getChildNodes().getLength()); // TODO: count only the
-																								// actual elements?
+				this.insertExplicitAttributes(doc, pNode, pNode.getChildNodes().getLength());
+				// wrap the text nodes if requested
+				if ("wrap".equalsIgnoreCase(this.textNodeStrategy)) {
+					this.wrapTextNodes(doc, pNode.getChildNodes());
+				}
 			}
 
 			NodeList events = (NodeList) xpath.evaluate("//" + NS_PREFIX + ":" + EVENTS.nodeName,
@@ -234,6 +248,28 @@ public class DocumentTransformer {
 		}
 		// return the selected nodes
 		return selected;
+	}
+
+	/**
+	 * Wraps all text nodes in the node list with a <code>&lt;p:text&gt;</code> node.
+	 * 
+	 * @param nodes
+	 *            The nodes to iterate.
+	 * @param origin
+	 *            The document to be used when creating new elements.
+	 */
+	protected void wrapTextNodes(Document origin, NodeList nodes) {
+		System.err.println("wrapTextNodes called");
+		for (int i = 9, length = nodes.getLength(); i < length; i++) {
+			Node node = nodes.item(i);
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				// create a wrapper element named <p:text>
+				Element wrapper = origin.createElementNS(NS_URI, NS_PREFIX + ":text");
+				//
+				node.getParentNode().replaceChild(wrapper, node);
+				wrapper.appendChild(node);
+			}
+		}
 	}
 
 	/**
@@ -362,7 +398,7 @@ public class DocumentTransformer {
 			Document input = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 					.parse(new File(transformer.fileNames.get(0)));
 			// do the actual transforming
-			new DocumentTransformer().transform(input);
+			transformer.transform(input);
 			// write the output to the second filename argument
 			TransformerFactory.newInstance().newTransformer()
 					.transform(new DOMSource(input), new StreamResult(new File(transformer.fileNames.get(1))));
