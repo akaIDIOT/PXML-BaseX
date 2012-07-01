@@ -9,11 +9,16 @@ PARSER_BEGIN(XPathTransformer)
 package nl.utwente.cs.pxml.transform.xpath;
 
 import java.io.StringReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 
 /**
  * XPathTransformer - JavaCC-generated parser to transform an XPath-expression on an a regular context to an 
@@ -23,29 +28,89 @@ class XPathTransformer {
 	
 	// store the currently supported axes for ease of use
 	public static final List<String> SUPPORTED_AXES = Arrays.asList("child", "descendant");
+	// store the axes participating in 'anchor' optimization
+	public static final List<String> ANCHOR_AXES = Arrays.asList("child", "descendant-or-self", "descendant");
+
+	// parameter to enable 'anchor' optimization
+	@Parameter(names = "--anchor-opt", description = "use anchor optimization")
+	protected boolean anchorOpt = false;
+
+	// parameter to capture required arguments (required to be a list...)
+	@Parameter(description = "<xpath-expression>")
+	protected List<String> input;
 
 	// helper variable to work around XQuery's immutable variables
 	protected int currentStep = 0;
 
-	public static void main(String... args) {
-		// do a sanity check (just a single XPath-expression supported for now)
-		if (args.length != 1) {
-			System.err.println("expected exactly 1 argument, terminating");
-			System.exit(1);
-		}
+	// empty constructor (to be able to use it with JCommander)
+	public XPathTransformer() {
 
-		// create a new transformer, reading from the only argument
-		XPathTransformer transformer = new XPathTransformer(new StringReader(args[0]));
+	}
+
+	// copied from generated code to be able to bypass constructor
+	protected void init(Reader stream) {
+	    jj_input_stream = new SimpleCharStream(stream, 1, 1);
+	    token_source = new XPathTransformerTokenManager(jj_input_stream);
+	    token = new Token();
+	    jj_ntk = -1;
+	    jj_gen = 0;
+	    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
+    }
+
+	/**
+	 * Generates lines of XQuery code to perform a single step (in practice only supports descendant-style axes).
+	 * 
+	 * @param step
+	 *         The XPath step to take.
+	 */
+	protected List<String> stepCode(String step) {
+		List<String> expression = new ArrayList<String>();
+
+		// increment step counter
+		this.currentStep++;
+
+		expression.add("");
+		expression.add("(: take step " + this.currentStep + ": " + step + " :)");
+
+		// create 'next' context
+		expression.add(String.format("for $context%d in $context%d/%s",
+				this.currentStep, this.currentStep - 1, step));
+
+		// collect variable descriptors and combine
+		expression.add(String.format("    let $descriptors%d := pxml:combine($descriptors%d, $context%d/ancestor-or-self::*/@p:descriptors/string())",
+				this.currentStep, this.currentStep - 1, this.currentStep));
+
+		// prune inconsistent possibilities
+		expression.add(String.format("    where pxml:consistent($descriptors%d)", this.currentStep));
+		expression.add("return");
+
+		return expression;
+	}
+
+	public static void main(String... args) {
+		// create a new transformer
+		XPathTransformer transformer = new XPathTransformer();
+		JCommander arguments = new JCommander(transformer);
+
 		// parse the input string, the result is a string containing the resulting XQuery-expression
-		String code = "";
 		try {
-			 code = transformer.parseInput();
+			// have JCommander parse and assign arguments
+			arguments.parse(args);
+			// force the transformer to (re)init using the captured input
+			transformer.init(new StringReader(transformer.input.get(0)));
+
+			// compile input to output
+			String code = transformer.parseInput();
 
 			// print header
-			System.out.println("(: transforming XPath expression " + args[0] + " :)\n");
+			System.out.println("(: transforming XPath expression " + transformer.input.get(0) + " :)\n");
 
 			// print the actual generated code
 			System.out.println(code);
+		} catch (ParameterException e) {
+		e.printStackTrace();
+			arguments.usage();
+			System.exit(1);
 		} catch (ParseException e) {
 			System.err.println(e.getMessage());
 			System.exit(1);
@@ -129,6 +194,8 @@ String parseInput() :
 {
 	String docName;
 	AxisStep axisStep;
+	boolean onDescendantAxis = false;
+	List<String> anchorBacklog = new ArrayList<String>();
 	List<String> expression = new ArrayList<String>();
 }
 {
@@ -159,25 +226,28 @@ String parseInput() :
 				throw new RuntimeException("axis " + axisStep.axis + " is not supported");
 			}
 
-			// increment step counter
-			this.currentStep++;
-			expression.add("");
-			expression.add("(: take step " + this.currentStep + ": " + axisStep + " :)");
+			if (this.anchorOpt && ANCHOR_AXES.contains(axisStep.axis)) {
+				// optimize descendant axis if requested
+				anchorBacklog.add(axisStep.toString());
+			} else {
+				// if backlog is not empty and we got to this point, clear backlog now before appending current step
+				if (!anchorBacklog.isEmpty()) {
+					expression.addAll(this.stepCode(CollectionUtils.join(anchorBacklog, "/")));
+					anchorBacklog.clear();
+				}
 
-			// create 'next' context
-			expression.add(String.format("for $context%d in $context%d/%s",
-					this.currentStep, this.currentStep - 1, axisStep));
-
-			// collect variable descriptors and combine
-			expression.add(String.format("    let $descriptors%d := pxml:combine($descriptors%d, $context%d/ancestor-or-self::*/@p:descriptors/string())",
-					this.currentStep, this.currentStep - 1, this.currentStep));
-
-			// prune inconsistent possibilities
-			expression.add(String.format("    where pxml:consistent($descriptors%d)", this.currentStep));
-			expression.add("return");
+				// append code for current step
+				expression.addAll(this.stepCode(axisStep.toString()));
+			}
 		}
 	)+
 	{
+		// first check to see if backlog is clear
+		if (!anchorBacklog.isEmpty()) {
+			expression.addAll(this.stepCode(CollectionUtils.join(anchorBacklog, "/")));
+			anchorBacklog.clear();
+		}
+
 		// prepare result variables
 		expression.add("");
 		expression.add("(: all steps taken, calculate probabilities for all resulting nodes :)");
