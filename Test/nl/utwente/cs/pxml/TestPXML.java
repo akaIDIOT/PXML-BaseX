@@ -64,8 +64,10 @@ public class TestPXML {
 		String two = subject.combine(set2str, Empty.SEQ);
 		for (String descriptor : set1) {
 			TestPXML.assertContains(one, descriptor);
+			TestPXML.assertContains(two, descriptor);
 		}
 		for (String descriptor : set2) {
+			TestPXML.assertContains(one, descriptor);
 			TestPXML.assertContains(two, descriptor);
 		}
 	}
@@ -76,22 +78,22 @@ public class TestPXML {
 	@Test
 	public void testConsistent() {
 		// a consistent set of descriptors without duplicates
-		String set1 = "arg1=1 arg2=2 arg3=0 arg4=1";
+		Str set1 = Str.get("arg1=1 arg2=2 arg3=0 arg4=1");
 		// a consistent set of descriptors with duplicates
-		String set2 = "arg1=1 arg2=2 arg2=2 arg1=1 arg3=0 arg4=1";
+		Str set2 = Str.get("arg1=1 arg2=2 arg2=2 arg1=1 arg3=0 arg4=1");
 		// an inconsistent set of descriptors without duplicates
-		String set3 = "arg1=1 arg2=2 arg3=0 arg4=1 arg2=1";
+		Str set3 = Str.get("arg1=1 arg2=2 arg3=0 arg4=1 arg2=1");
 		// an inconsistent set of descriptors with duplicates
-		String set4 = "arg1=1 arg2=2 arg2=2 arg1=1 arg1=2 arg3=0 arg4=1 arg2=4";
+		Str set4 = Str.get("arg1=1 arg2=2 arg2=2 arg1=1 arg1=2 arg3=0 arg4=1 arg2=4");
 
 		// expect set1 to be consistent
-		Assert.assertTrue(subject.consistent(Str.get(set1)));
+		Assert.assertTrue(subject.consistent(set1));
 		// expect set2 to be consistent
-		Assert.assertTrue(subject.consistent(Str.get(set2)));
+		Assert.assertTrue(subject.consistent(set2));
 		// expect set3 to be inconsistent
-		Assert.assertFalse(subject.consistent(Str.get(set3)));
+		Assert.assertFalse(subject.consistent(set3));
 		// expect set4 to be inconsistent
-		Assert.assertFalse(subject.consistent(Str.get(set4)));
+		Assert.assertFalse(subject.consistent(set4));
 	}
 
 	/**
@@ -101,14 +103,14 @@ public class TestPXML {
 	@Test
 	public void testMutuallyExclusive() {
 		// consistent twin sets that can both be true (without overlap)
-		String set11 = "arg1=1 arg5=2 arg6=0 arg4=1";
-		String set12 = "arg2=1 arg3=2 arg7=0 arg8=1";
+		Str set11 = Str.get("arg1=1 arg5=2 arg6=0 arg4=1");
+		Str set12 = Str.get("arg2=1 arg3=2 arg7=0 arg8=1");
 		// consistent twin sets that can both be true (with overlap)
-		String set21 = "arg1=1 arg5=2 arg6=0 arg4=1";
-		String set22 = "arg1=1 arg2=2 arg6=0 arg3=1";
+		Str set21 = Str.get("arg1=1 arg5=2 arg6=0 arg4=1");
+		Str set22 = Str.get("arg1=1 arg2=2 arg6=0 arg3=1");
 		// twin sets that are mutually exclusive
-		String set31 = "arg1=1 arg5=2 arg6=0 arg4=1";
-		String set32 = "arg1=1 arg5=2 arg3=0 arg4=2";
+		Str set31 = Str.get("arg1=1 arg5=2 arg6=0 arg4=1");
+		Str set32 = Str.get("arg1=1 arg5=2 arg3=0 arg4=2");
 
 		// expect set1 to not be mutually exclusive (both ways)
 		Assert.assertFalse(subject.mutuallyExclusive(set11, set12));
