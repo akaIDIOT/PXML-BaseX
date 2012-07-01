@@ -8,6 +8,7 @@ import java.util.TreeMap;
 
 import nl.utwente.cs.pxml.util.CollectionUtils;
 
+import org.basex.query.QueryException;
 import org.basex.query.QueryModule;
 import org.basex.query.value.Value;
 import org.basex.query.value.item.Item;
@@ -58,15 +59,16 @@ public class PXML extends QueryModule {
 			// read all the additional conditions from the sequence.
 			for (Item item : additional) {
 				// a single item in the sequence might contain multiple conditions
-				for (Condition condition : new ConditionGenerator((String) item.toJava())) {
+				for (Condition condition : new ConditionGenerator(item.toJava().toString())) {
 					result.add(condition.toString());
 				}
 			}
 
 			// join the resulting set on a space
 			return CollectionUtils.join(result, " ");
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (QueryException e) {
+			// TODO: submit message to BaseX logging (or declare thrown?)
+			System.err.println("error combining descriptor values: " + e.getMessage());
 			return "";
 		}
 	}
@@ -87,12 +89,10 @@ public class PXML extends QueryModule {
 		Map<String, Integer> conditions = new HashMap<String, Integer>();
 
 		for (Condition condition : generator) {
-			// rely on Map to enforce uniqueness of name, use Integer as it can
-			// be null
+			// rely on Map to enforce uniqueness of name, use Integer as it can be null
 			Integer value = conditions.put(condition.name, condition.value);
 			if (value != null && value != condition.value) {
-				// immediately return false if the name was already encountered
-				// with a different value
+				// immediately return false if the name was already encountered with a different value
 				return false;
 			}
 		}
@@ -123,8 +123,7 @@ public class PXML extends QueryModule {
 			conditions.put(condition.name, condition.value);
 		}
 
-		// ... check if there is a condition in b that has the same name but a
-		// different value
+		// ... check if there is a condition in b that has the same name but a different value
 		for (Condition condition : condB) {
 			Integer value = conditions.get(condition.name);
 			if (value != null && value != condition.value) {
@@ -149,7 +148,7 @@ public class PXML extends QueryModule {
 	 */
 	@Requires(Permission.NONE)
 	@ContextDependent
-	public double probability(ANode wsdList, Str conditions) { // TODO: make String... a BaseX Value?
+	public double probability(ANode wsdList, Str conditions) {
 		double probability = 1.0;
 		// find probabilities for all conditions, multiply them
 		for (Condition condition : new ConditionGenerator(conditions.toJava())) {
@@ -180,27 +179,33 @@ public class PXML extends QueryModule {
 	 * @return The probability of the condition being true.
 	 */
 	protected Double findProbability(ANode wsdList, String strCondition) {
-		Condition condition = new Condition(strCondition);
-		// find node matching variable name
-		for (ANode variable : wsdList.children()) {
-			if (condition.name.equals(new String(variable.qname().local()))) {
-				String valName = "val-" + condition.value;
-				// found the right node, now find the right attribute matching variable value
-				for (ANode attr : variable.attributes()) {
-					if (valName.equals(new String(attr.qname().local()))) {
-						// found the right attribute, parse the value as a double
-						// TODO: catch NumberFormatException?
-						return Double.parseDouble(new String(attr.string()));
+		try {
+			Condition condition = new Condition(strCondition);
+			// find node matching variable name
+			for (ANode variable : wsdList.children()) {
+				if (condition.name.equals(new String(variable.qname().local()))) {
+					String valName = "val-" + condition.value;
+					// found the right node, now find the right attribute matching variable value
+					for (ANode attr : variable.attributes()) {
+						if (valName.equals(new String(attr.qname().local()))) {
+							// found the right attribute, parse the value as a double
+							return Double.parseDouble(new String(attr.string()));
+						}
 					}
+
+					// no attribute matching the value was found, return 0.0
+					return 0.0;
 				}
-
-				// no attribute matching the value was found, return 0.0
-				return 0.0;
 			}
-		}
 
-		// no node matching the variable was found, return 0.0
-		return 0.0;
+			// no node matching the variable was found, return 0.0
+			return 0.0;
+		} catch (NumberFormatException e) {
+			// malformed probability, fall back to 0.0
+			// TODO: submit message to BaseX logging
+			System.err.println("malformed probability for condition " + strCondition + ": " + e.getMessage());
+			return 0.0;
+		}
 	}
 
 }
