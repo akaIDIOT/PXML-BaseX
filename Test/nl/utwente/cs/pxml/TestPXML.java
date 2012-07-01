@@ -1,7 +1,14 @@
 package nl.utwente.cs.pxml;
 
+import java.util.Arrays;
 import java.util.Collection;
 
+import nl.utwente.cs.pxml.util.CollectionUtils;
+
+import org.basex.query.value.Value;
+import org.basex.query.value.item.Str;
+import org.basex.query.value.seq.Empty;
+import org.basex.query.value.seq.ItemSeq;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,30 +33,39 @@ public class TestPXML {
 		String[] set1 = {
 				"arg1=1", "arg2=2", "arg1=2", "arg2=1"
 		};
-		// set of descriptors with a duplicates
+		Str set1str = Str.get(CollectionUtils.join(Arrays.asList(set1), " "));
+		
+		// set of descriptors with a duplicate
 		String[] set2 = {
 				"arg1=1", "arg2=2", "arg2=1", "arg1=2", "arg2=1", "arg1=1"
 		};
+		Str set2str = Str.get(CollectionUtils.join(Arrays.asList(set2), " "));
 
 		// simple test for determinism
-		Assert.assertEquals(subject.combine(set1), subject.combine(set1));
+		Assert.assertEquals(subject.combine(set1str, Empty.SEQ), subject.combine(set1str, Empty.SEQ));
 
-		// test to see if all descriptors are still present (evil string length
-		// hack :()
-		Assert.assertEquals(subject.combine(set1).length(), set1.length * (descriptorLength + 1) - 1);
+		// test to see if all descriptors are still present (evil string length hack :()
+		Assert.assertEquals(subject.combine(set1str, Empty.SEQ).length(), set1.length * (descriptorLength + 1) - 1);
 
 		// test to see if combine removes duplicates
-		Assert.assertEquals(subject.combine(set1).length(), subject.combine(set2).length());
+		Assert.assertEquals(subject.combine(set1str, Empty.SEQ).length(), subject.combine(set2str, Empty.SEQ).length());
+		
+		// test to see if combining sets 1 and 2 will yield the length of set 2
+		Str[] strs = new Str[set2.length];
+		for (int i = 0; i < set2.length; i++) {
+			strs[i] = Str.get(set2[i]);
+		}
+		Value sequence = ItemSeq.get(strs, set2.length);
+		// set 2 has two duplicates, subtract 2 from its length
+		Assert.assertEquals(subject.combine(set1str, sequence).length(), (set2.length - 2) * (descriptorLength + 1) - 1);
 
 		// test for existence of all values in both computed combinations
-		String one = subject.combine(set1);
-		String two = subject.combine(set2);
+		String one = subject.combine(set1str, Empty.SEQ);
+		String two = subject.combine(set2str, Empty.SEQ);
 		for (String descriptor : set1) {
 			TestPXML.assertContains(one, descriptor);
-			TestPXML.assertContains(two, descriptor);
 		}
 		for (String descriptor : set2) {
-			TestPXML.assertContains(one, descriptor);
 			TestPXML.assertContains(two, descriptor);
 		}
 	}
