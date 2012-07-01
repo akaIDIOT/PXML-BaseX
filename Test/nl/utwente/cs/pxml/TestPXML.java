@@ -85,13 +85,13 @@ public class TestPXML {
 		String set4 = "arg1=1 arg2=2 arg2=2 arg1=1 arg1=2 arg3=0 arg4=1 arg2=4";
 
 		// expect set1 to be consistent
-		Assert.assertTrue(subject.consistent(set1));
+		Assert.assertTrue(subject.consistent(Str.get(set1)));
 		// expect set2 to be consistent
-		Assert.assertTrue(subject.consistent(set2));
+		Assert.assertTrue(subject.consistent(Str.get(set2)));
 		// expect set3 to be inconsistent
-		Assert.assertFalse(subject.consistent(set3));
+		Assert.assertFalse(subject.consistent(Str.get(set3)));
 		// expect set4 to be inconsistent
-		Assert.assertFalse(subject.consistent(set4));
+		Assert.assertFalse(subject.consistent(Str.get(set4)));
 	}
 
 	/**
