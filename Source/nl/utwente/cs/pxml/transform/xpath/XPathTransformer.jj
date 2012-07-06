@@ -54,7 +54,7 @@ class XPathTransformer {
 	    token = new Token();
 	    jj_ntk = -1;
 	    jj_gen = 0;
-	    for (int i = 0; i < 2; i++) jj_la1[i] = -1;
+	    for (int i = 0; i < 1; i++) jj_la1[i] = -1;
     }
 
 	/**
@@ -175,18 +175,14 @@ TOKEN : {
 // separator between axis name and node test
 | < SEPARATOR : "::" >
 
-// node names, required to start with a letter or _, followed by a word character (A-z, 0-9 or _)
-| < NODENAME : (["A"-"z", "_"])(["0"-"9", "A"-"z", "_"])* >
-
-// XPath expression for 'any'
-| < NODEANY : "*" >
-
-// XPath node types (copied from http://www.w3.org/TR/xpath/ section 3.7)
-| < NODETYPE : 
-	  "comment()"	
+| < NODETEST : 
+	  (["A"-"z", "_"])(["0"-"9", "A"-"z", "_"])*
+	| "*"
+	| "comment()"	
 	| "text()"	
 	| "processing-instruction()"	
 	| "node()" >
+	  
 }
 
 String parseInput() :
@@ -301,7 +297,7 @@ AxisStep axisStep() :
 	< STEP >
 	axis = < AXIS >
 	< SEPARATOR >
-	( nodeTest = < NODENAME > | < NODEANY > | < NODETYPE > )
+	nodeTest = < NODETEST >
 	{
 		// return the input, an XPath axis step
 		return new AxisStep(axis.image, nodeTest.image);
