@@ -36,7 +36,7 @@ class XPathTransformer {
 	protected boolean anchorOpt = false;
 
 	// parameter to capture required arguments (required to be a list...)
-	@Parameter(description = "<xpath-expression>")
+	@Parameter(description = "<xpath-expression>", required = true)
 	protected List<String> input;
 
 	// helper variable to work around XQuery's immutable variables
@@ -108,7 +108,6 @@ class XPathTransformer {
 			// print the actual generated code
 			System.out.println(code);
 		} catch (ParameterException e) {
-		e.printStackTrace();
 			arguments.usage();
 			System.exit(1);
 		} catch (ParseException e) {
